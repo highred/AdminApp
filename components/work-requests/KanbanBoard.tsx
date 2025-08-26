@@ -2,14 +2,16 @@
 import React from 'react';
 import { RequestStatus, WorkRequest } from '../../types';
 import KanbanColumn from './KanbanColumn';
+import { REQUEST_PRIORITY_ORDER } from '../../constants';
 
 interface KanbanBoardProps {
     requests: WorkRequest[];
     onDeleteRequest: (requestId: number) => void;
     onStatusChange: (requestId: number, newStatus: RequestStatus, oldStatus: RequestStatus) => void;
+    sortBy: 'priority' | 'recent';
 }
 
-const KanbanBoard: React.FC<KanbanBoardProps> = ({ requests, onDeleteRequest, onStatusChange }) => {
+const KanbanBoard: React.FC<KanbanBoardProps> = ({ requests, onDeleteRequest, onStatusChange, sortBy }) => {
 
     const columns: RequestStatus[] = [
         RequestStatus.NewRequest,
@@ -26,7 +28,21 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ requests, onDeleteRequest, on
     };
 
     const getRequestsByStatus = (status: RequestStatus): WorkRequest[] => {
-        return requests.filter(req => req.status === status);
+        const filtered = requests.filter(req => req.status === status);
+
+        if (sortBy === 'priority') {
+            return filtered.sort((a, b) => {
+                const priorityComparison = REQUEST_PRIORITY_ORDER[b.priority] - REQUEST_PRIORITY_ORDER[a.priority];
+                if (priorityComparison !== 0) {
+                    return priorityComparison;
+                }
+                // Secondary sort by date for items with the same priority
+                return new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime();
+            });
+        }
+        
+        // Default sort by 'recent'
+        return filtered.sort((a, b) => new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime());
     };
 
     return (

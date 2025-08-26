@@ -17,6 +17,7 @@ type ModalState = {
 
 const WorkRequests: React.FC = () => {
     const [view, setView] = useState('kanban'); // 'kanban', 'list'
+    const [kanbanSort, setKanbanSort] = useState<'priority' | 'recent'>('priority');
     const { workRequests, programs, deleteWorkRequest, updateWorkRequestStatus } = useAppContext();
     const [searchParams] = useSearchParams();
     const programSlug = searchParams.get('program');
@@ -59,18 +60,21 @@ const WorkRequests: React.FC = () => {
         const requestsToDisplay = programSlug ? filteredRequests : workRequests;
         switch (view) {
             case 'kanban':
-                return <KanbanBoard requests={requestsToDisplay} onDeleteRequest={handleDeleteRequest} onStatusChange={handleStatusChange} />;
+                return <KanbanBoard requests={requestsToDisplay} onDeleteRequest={handleDeleteRequest} onStatusChange={handleStatusChange} sortBy={kanbanSort} />;
             case 'list':
                 return <WorkRequestList requests={requestsToDisplay} onDeleteRequest={handleDeleteRequest} />;
             default:
-                return <KanbanBoard requests={requestsToDisplay} onDeleteRequest={handleDeleteRequest} onStatusChange={handleStatusChange} />;
+                return <KanbanBoard requests={requestsToDisplay} onDeleteRequest={handleDeleteRequest} onStatusChange={handleStatusChange} sortBy={kanbanSort} />;
         }
     };
     
-    const getButtonClass = (buttonView: string) => 
-        `px-4 py-2 rounded-md text-sm font-medium transition ${
-            view === buttonView ? 'bg-primary text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+    const getButtonClass = (isActive: boolean) => 
+        `px-3 py-1 rounded-md text-sm font-medium transition ${
+            isActive 
+                ? 'bg-white dark:bg-dark-card shadow-sm text-primary dark:text-white' 
+                : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-dark-bg/50'
         }`;
+
 
     return (
         <div className="h-full flex flex-col">
@@ -84,9 +88,16 @@ const WorkRequests: React.FC = () => {
                         Add New Request
                     </button>
                 </div>
-                <div className="flex items-center space-x-2">
-                    <button onClick={() => setView('kanban')} className={getButtonClass('kanban')}>Kanban</button>
-                    <button onClick={() => setView('list')} className={getButtonClass('list')}>List</button>
+                <div className="flex items-center space-x-2 bg-gray-200 dark:bg-gray-700 rounded-lg p-1">
+                     {view === 'kanban' && (
+                        <>
+                            <button onClick={() => setKanbanSort('priority')} className={getButtonClass(kanbanSort === 'priority')}>Priority</button>
+                            <button onClick={() => setKanbanSort('recent')} className={getButtonClass(kanbanSort === 'recent')}>Recent</button>
+                            <div className="w-px h-4 bg-gray-300 dark:bg-gray-600"></div>
+                        </>
+                    )}
+                    <button onClick={() => setView('kanban')} className={getButtonClass(view === 'kanban')}>Kanban</button>
+                    <button onClick={() => setView('list')} className={getButtonClass(view === 'list')}>List</button>
                 </div>
             </div>
             <div className="flex-1 overflow-hidden">

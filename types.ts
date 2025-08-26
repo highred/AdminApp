@@ -45,3 +45,4 @@ export interface WorkRequest {
 }
 
 export type ZoomLevel = 'sm' | 'md' | 'lg';
+export type Theme = 'light' | 'dark' | 'system';

@@ -1,7 +1,7 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../../hooks/useAppContext';
-import { Program, School, Classroom } from '../../types';
-import { PencilIcon, TrashIcon, PlusIcon, ChevronUpIcon } from '../icons/Icons';
+import { Program, School, Classroom, Theme } from '../../types';
+import { PencilIcon, TrashIcon, PlusIcon, ChevronUpIcon, SunIcon, MoonIcon, ComputerDesktopIcon } from '../icons/Icons';
 
 type EditModalState = {
     isOpen: boolean;
@@ -14,7 +14,8 @@ const Admin: React.FC = () => {
         programs, schools, classrooms,
         addProgram, updateProgram,
         addSchool, updateSchool, deleteSchool,
-        addClassroom, updateClassroom, deleteClassroom
+        addClassroom, updateClassroom, deleteClassroom,
+        theme, setTheme
     } = useAppContext();
     
     const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
@@ -72,73 +73,110 @@ const Admin: React.FC = () => {
 
     return (
         <div className="space-y-6 h-full overflow-y-auto">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold">Manage Organization</h1>
-                <button onClick={() => handleOpenModal('Program', {})} className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-indigo-700">
-                    <PlusIcon className="h-5 w-5 mr-2" />
-                    Add Program
-                </button>
+            <h1 className="text-3xl font-bold">Admin Settings</h1>
+
+            <div className="bg-white dark:bg-dark-card rounded-lg shadow-md">
+                <div className="p-4 border-b dark:border-gray-700">
+                    <h2 className="text-xl font-bold">Appearance</h2>
+                </div>
+                <div className="p-4 space-y-2">
+                    <h3 className="text-base font-semibold">Theme</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Select your preferred interface theme.</p>
+                    <div className="flex space-x-2 rounded-lg bg-gray-100 dark:bg-gray-900 p-1">
+                        {(['light', 'dark', 'system'] as Theme[]).map((mode) => {
+                            const isActive = theme === mode;
+                            const Icon = mode === 'light' ? SunIcon : mode === 'dark' ? MoonIcon : ComputerDesktopIcon;
+                            return (
+                                <button
+                                    key={mode}
+                                    onClick={() => setTheme(mode)}
+                                    className={`w-full flex justify-center items-center rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                                        isActive
+                                            ? 'bg-white dark:bg-dark-bg shadow-sm text-primary dark:text-white'
+                                            : 'text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-dark-bg/50'
+                                    }`}
+                                    aria-pressed={isActive}
+                                >
+                                    <Icon className="h-5 w-5 mr-2" />
+                                    <span className="capitalize">{mode}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
             </div>
 
-            <div className="space-y-4">
-                {programs.map(program => {
-                    const programSchools = schools.filter(s => s.programId === program.id);
-                    const isProgramExpanded = expandedIds[`p-${program.id}`];
-                    return (
-                        <div key={program.id} className="bg-white dark:bg-dark-card rounded-lg shadow-md">
-                            <div className="p-4 flex items-center justify-between cursor-pointer" onClick={() => toggleExpand(`p-${program.id}`)}>
-                                <div className="flex items-center">
-                                    <h2 className="text-xl font-bold">{program.name}</h2>
-                                    <span className="ml-4 text-sm text-gray-500 dark:text-gray-400">{programSchools.length} Schools</span>
+            <div className="bg-white dark:bg-dark-card rounded-lg shadow-md">
+                <div className="p-4 flex items-center justify-between border-b dark:border-gray-700">
+                    <h2 className="text-xl font-bold">Manage Organization</h2>
+                    <button onClick={() => handleOpenModal('Program', {})} className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-indigo-700 text-sm font-medium">
+                        <PlusIcon className="h-5 w-5 mr-2" />
+                        Add Program
+                    </button>
+                </div>
+                <div className="p-4 space-y-4">
+                    {programs.map(program => {
+                        const programSchools = schools.filter(s => s.programId === program.id);
+                        const isProgramExpanded = expandedIds[`p-${program.id}`];
+                        return (
+                            <div key={program.id} className="bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+                                <div className="p-4 flex items-center justify-between cursor-pointer" onClick={() => toggleExpand(`p-${program.id}`)}>
+                                    <div className="flex items-center">
+                                        <h3 className="text-lg font-bold">{program.name}</h3>
+                                        <span className="ml-4 text-sm text-gray-500 dark:text-gray-400">{programSchools.length} Schools</span>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <button onClick={(e) => { e.stopPropagation(); handleOpenModal('Program', program); }} className="p-1 text-gray-400 hover:text-primary"><PencilIcon className="h-5 w-5"/></button>
+                                        <button onClick={(e) => { e.stopPropagation(); handleOpenModal('School', { programId: program.id }); }} className="p-1 text-gray-400 hover:text-green-500"><PlusIcon className="h-5 w-5"/></button>
+                                        <ChevronUpIcon className={`h-5 w-5 transition-transform ${isProgramExpanded ? '' : 'rotate-180'}`} />
+                                    </div>
                                 </div>
-                                <div className="flex items-center space-x-2">
-                                    <button onClick={(e) => { e.stopPropagation(); handleOpenModal('Program', program); }} className="p-1 text-gray-400 hover:text-primary"><PencilIcon className="h-5 w-5"/></button>
-                                    <button onClick={(e) => { e.stopPropagation(); handleOpenModal('School', { programId: program.id }); }} className="p-1 text-gray-400 hover:text-green-500"><PlusIcon className="h-5 w-5"/></button>
-                                    <ChevronUpIcon className={`h-5 w-5 transition-transform ${isProgramExpanded ? '' : 'rotate-180'}`} />
-                                </div>
-                            </div>
-                            {isProgramExpanded && (
-                                <div className="px-4 pb-4 border-t dark:border-gray-700">
-                                    {programSchools.map(school => {
-                                        const schoolClassrooms = classrooms.filter(c => c.schoolId === school.id);
-                                        const isSchoolExpanded = expandedIds[`s-${school.id}`];
-                                        return (
-                                            <div key={school.id} className="mt-3 bg-gray-50 dark:bg-gray-800 rounded">
-                                                <div className="p-3 flex items-center justify-between cursor-pointer" onClick={() => toggleExpand(`s-${school.id}`)}>
-                                                    <div className="flex items-center">
-                                                        <h3 className="font-semibold">{school.name}</h3>
-                                                        <span className="ml-3 text-xs text-gray-500 dark:text-gray-400">{schoolClassrooms.length} Classrooms</span>
+                                {isProgramExpanded && (
+                                    <div className="px-4 pb-4 border-t dark:border-gray-700">
+                                        {programSchools.map(school => {
+                                            const schoolClassrooms = classrooms.filter(c => c.schoolId === school.id);
+                                            const isSchoolExpanded = expandedIds[`s-${school.id}`];
+                                            return (
+                                                <div key={school.id} className="mt-3 bg-white dark:bg-gray-800 rounded">
+                                                    <div className="p-3 flex items-center justify-between cursor-pointer" onClick={() => toggleExpand(`s-${school.id}`)}>
+                                                        <div className="flex items-center">
+                                                            <h4 className="font-semibold">{school.name}</h4>
+                                                            <span className="ml-3 text-xs text-gray-500 dark:text-gray-400">{schoolClassrooms.length} Classrooms</span>
+                                                        </div>
+                                                        <div className="flex items-center space-x-2">
+                                                             <button onClick={(e) => { e.stopPropagation(); handleOpenModal('School', school); }} className="p-1 text-gray-400 hover:text-primary"><PencilIcon className="h-4 w-4"/></button>
+                                                             <button onClick={(e) => { e.stopPropagation(); handleDelete('School', school.id); }} className="p-1 text-gray-400 hover:text-red-500"><TrashIcon className="h-4 w-4"/></button>
+                                                             <button onClick={(e) => { e.stopPropagation(); handleOpenModal('Classroom', { schoolId: school.id }); }} className="p-1 text-gray-400 hover:text-green-500"><PlusIcon className="h-4 w-4"/></button>
+                                                             <ChevronUpIcon className={`h-4 w-4 transition-transform ${isSchoolExpanded ? '' : 'rotate-180'}`} />
+                                                        </div>
                                                     </div>
-                                                    <div className="flex items-center space-x-2">
-                                                         <button onClick={(e) => { e.stopPropagation(); handleOpenModal('School', school); }} className="p-1 text-gray-400 hover:text-primary"><PencilIcon className="h-4 w-4"/></button>
-                                                         <button onClick={(e) => { e.stopPropagation(); handleDelete('School', school.id); }} className="p-1 text-gray-400 hover:text-red-500"><TrashIcon className="h-4 w-4"/></button>
-                                                         <button onClick={(e) => { e.stopPropagation(); handleOpenModal('Classroom', { schoolId: school.id }); }} className="p-1 text-gray-400 hover:text-green-500"><PlusIcon className="h-4 w-4"/></button>
-                                                         <ChevronUpIcon className={`h-4 w-4 transition-transform ${isSchoolExpanded ? '' : 'rotate-180'}`} />
-                                                    </div>
+                                                    {isSchoolExpanded && (
+                                                        <div className="px-3 pb-3 border-t dark:border-gray-600">
+                                                            <ul className="mt-2 space-y-1 pl-4 list-disc list-inside text-sm">
+                                                                {schoolClassrooms.map(classroom => (
+                                                                    <li key={classroom.id} className="flex justify-between items-center">
+                                                                        <span>{classroom.name}</span>
+                                                                        <div className="flex items-center space-x-1">
+                                                                            <button onClick={() => handleOpenModal('Classroom', classroom)} className="p-1 text-gray-400 hover:text-primary"><PencilIcon className="h-4 w-4"/></button>
+                                                                            <button onClick={() => handleDelete('Classroom', classroom.id)} className="p-1 text-gray-400 hover:text-red-500"><TrashIcon className="h-4 w-4"/></button>
+                                                                        </div>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                {isSchoolExpanded && (
-                                                    <div className="px-3 pb-3 border-t dark:border-gray-600">
-                                                        <ul className="mt-2 space-y-1 pl-4 list-disc list-inside text-sm">
-                                                            {schoolClassrooms.map(classroom => (
-                                                                <li key={classroom.id} className="flex justify-between items-center">
-                                                                    <span>{classroom.name}</span>
-                                                                    <div className="flex items-center space-x-1">
-                                                                        <button onClick={() => handleOpenModal('Classroom', classroom)} className="p-1 text-gray-400 hover:text-primary"><PencilIcon className="h-4 w-4"/></button>
-                                                                        <button onClick={() => handleDelete('Classroom', classroom.id)} className="p-1 text-gray-400 hover:text-red-500"><TrashIcon className="h-4 w-4"/></button>
-                                                                    </div>
-                                                                </li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
+                                            )
+                                        })}
+                                         {programSchools.length === 0 && (
+                                            <p className="text-sm text-center text-gray-500 dark:text-gray-400 py-4">No schools in this program yet.</p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
             <EditModal modalState={modalState} onClose={handleCloseModal} onSave={handleSave} />
         </div>

@@ -1,5 +1,5 @@
 import React, { createContext, useState, useCallback, ReactNode, useEffect } from 'react';
-import { Program, School, Classroom, WorkRequest, RequestStatus, ZoomLevel } from '../types';
+import { Program, School, Classroom, WorkRequest, RequestStatus, ZoomLevel, Theme } from '../types';
 import { supabase } from '../supabaseClient'; // Import the Supabase client
 
 type AddWorkRequestData = Omit<WorkRequest, 'id' | 'status' | 'submittedDate' | 'dueDate'>;
@@ -11,9 +11,11 @@ interface AppContextType {
   workRequests: WorkRequest[];
   isSidebarCollapsed: boolean;
   zoomLevel: ZoomLevel;
+  theme: Theme;
 
   toggleSidebar: () => void;
   setZoomLevel: (level: ZoomLevel) => void;
+  setTheme: (theme: Theme) => void;
 
   addProgram: (name: string) => Promise<void>;
   updateProgram: (program: Program) => Promise<void>;
@@ -49,6 +51,34 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [workRequests, setWorkRequests] = useState<WorkRequest[]>([]);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>('md');
+  const [theme, setTheme] = useState<Theme>(() => {
+    const storedTheme = localStorage.getItem('theme');
+    if (storedTheme === 'light' || storedTheme === 'dark') {
+      return storedTheme;
+    }
+    return 'system';
+  });
+
+  // --- THEME MANAGEMENT ---
+  useEffect(() => {
+    const root = window.document.documentElement;
+    const isDark =
+      theme === 'dark' ||
+      (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    
+    root.classList.toggle('dark', isDark);
+    localStorage.setItem('theme', theme);
+    
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => {
+      if (theme === 'system') {
+        root.classList.toggle('dark', mediaQuery.matches);
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [theme]);
 
   // --- DATA FETCHING ---
   const fetchData = useCallback(async () => {
@@ -201,8 +231,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     workRequests,
     isSidebarCollapsed,
     zoomLevel,
+    theme,
     toggleSidebar,
     setZoomLevel,
+    setTheme,
     addProgram,
     updateProgram,
     addSchool,
