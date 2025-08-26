@@ -16,18 +16,18 @@ const DailyHotlist: React.FC = () => {
 
         // 2. Sort the requests
         const sortedRequests = activeRequests.sort((a, b) => {
-            // Sort by Status (In Progress > New Request)
-            const statusOrderA = REQUEST_STATUS_ORDER[a.status];
-            const statusOrderB = REQUEST_STATUS_ORDER[b.status];
-            if (statusOrderA !== statusOrderB) {
-                return statusOrderB - statusOrderA;
-            }
-
             // Sort by Priority (Critical > High > Medium > Low)
             const priorityOrderA = REQUEST_PRIORITY_ORDER[a.priority];
             const priorityOrderB = REQUEST_PRIORITY_ORDER[b.priority];
             if (priorityOrderA !== priorityOrderB) {
                 return priorityOrderB - priorityOrderA;
+            }
+
+            // Sort by Status (In Progress > New Request)
+            const statusOrderA = REQUEST_STATUS_ORDER[a.status];
+            const statusOrderB = REQUEST_STATUS_ORDER[b.status];
+            if (statusOrderA !== statusOrderB) {
+                return statusOrderB - statusOrderA;
             }
 
             // Sort by Due Date (earlier dates first, nulls are last)
@@ -52,7 +52,7 @@ const DailyHotlist: React.FC = () => {
                     <FireIcon className="h-8 w-8 mr-3 text-red-500" />
                     Daily Hotlist
                 </h1>
-                <p className="mt-2 text-gray-600 dark:text-gray-400">Your top 10 most critical tasks based on status, priority, and due date.</p>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">Your top 10 most critical tasks based on priority, status, and due date.</p>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6">

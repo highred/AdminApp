@@ -48,6 +48,10 @@ const Sidebar: React.FC = () => {
           <ClipboardListIcon className={`h-5 w-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />
           {!isSidebarCollapsed && <span>All Requests</span>}
         </NavLink>
+        <NavLink to="/chatbot" className={navLinkClasses}>
+          <ChatIcon className={`h-5 w-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />
+          {!isSidebarCollapsed && <span>AI Assistant</span>}
+        </NavLink>
 
         <div className="pt-4">
           <h3 className={`px-4 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 ${isSidebarCollapsed ? 'hidden' : 'block'}`}>
@@ -74,10 +78,6 @@ const Sidebar: React.FC = () => {
       </nav>
 
       <div className="px-4 py-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
-         <NavLink to="/chatbot" className={navLinkClasses}>
-          <ChatIcon className={`h-5 w-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />
-          {!isSidebarCollapsed && <span>AI Assistant</span>}
-        </NavLink>
         <NavLink to="/admin" className={navLinkClasses}>
           <CogIcon className={`h-5 w-5 ${isSidebarCollapsed ? '' : 'mr-3'}`} />
           {!isSidebarCollapsed && <span>Admin Settings</span>}
