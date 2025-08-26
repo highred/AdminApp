@@ -59,15 +59,39 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
       const { data: schoolsData, error: schoolsError } = await supabase.from('schools').select('*').order('name');
       if (schoolsError) throw schoolsError;
-      setSchools(schoolsData);
+      const mappedSchools = schoolsData.map(s => ({
+        id: s.id,
+        name: s.name,
+        address: s.address,
+        contact: s.contact,
+        programId: s.program_id,
+      }));
+      setSchools(mappedSchools);
       
       const { data: classroomsData, error: classroomsError } = await supabase.from('classrooms').select('*').order('name');
       if (classroomsError) throw classroomsError;
-      setClassrooms(classroomsData);
+      const mappedClassrooms = classroomsData.map(c => ({
+        id: c.id,
+        name: c.name,
+        schoolId: c.school_id,
+      }));
+      setClassrooms(mappedClassrooms);
 
       const { data: workRequestsData, error: workRequestsError } = await supabase.from('work_requests').select('*').order('submitted_date', { ascending: false });
       if (workRequestsError) throw workRequestsError;
-      setWorkRequests(workRequestsData);
+      const mappedWorkRequests = workRequestsData.map(req => ({
+        id: req.id,
+        description: req.description,
+        requestorName: req.requestor_name,
+        submittedDate: req.submitted_date,
+        priority: req.priority,
+        status: req.status,
+        schoolId: req.school_id,
+        classroom: req.classroom,
+        programId: req.program_id,
+        dueDate: req.due_date,
+      }));
+      setWorkRequests(mappedWorkRequests as WorkRequest[]);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -124,29 +148,32 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const addWorkRequest = async (requestData: AddWorkRequestData) => {
     const d = new Date();
     const submittedDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    const newRequest = {
-        ...requestData,
+    const newRequestForDB = {
+        description: requestData.description,
+        requestor_name: requestData.requestorName,
+        priority: requestData.priority,
+        classroom: requestData.classroom,
         submitted_date: submittedDate,
         status: RequestStatus.NewRequest,
         program_id: requestData.programId,
         school_id: requestData.schoolId,
     };
-    // remove frontend-only keys
-    delete (newRequest as any).programId;
-    delete (newRequest as any).schoolId;
 
-    const { error } = await supabase.from('work_requests').insert(newRequest);
+    const { error } = await supabase.from('work_requests').insert(newRequestForDB);
     if (error) console.error(error); else await fetchData();
   };
 
   const updateWorkRequest = async (updatedRequest: WorkRequest) => {
     const requestToUpdate = {
-      ...updatedRequest,
+      description: updatedRequest.description,
+      requestor_name: updatedRequest.requestorName,
+      priority: updatedRequest.priority,
+      status: updatedRequest.status,
+      classroom: updatedRequest.classroom,
+      due_date: updatedRequest.dueDate,
       program_id: updatedRequest.programId,
       school_id: updatedRequest.schoolId
     };
-    delete (requestToUpdate as any).programId;
-    delete (requestToUpdate as any).schoolId;
     
     const { error } = await supabase.from('work_requests').update(requestToUpdate).eq('id', updatedRequest.id);
     if (error) console.error(error); else await fetchData();
