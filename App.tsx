@@ -4,6 +4,7 @@ import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import MobileHeader from './components/layout/MobileHeader';
 import Dashboard from './components/pages/Dashboard';
+import DailyHotlist from './components/pages/DailyHotlist';
 import WorkRequests from './components/pages/WorkRequests';
 import SchoolProfile from './components/pages/SchoolProfile';
 import AIChatbot from './components/pages/AIChatbot';
@@ -31,6 +32,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/hotlist" element={<DailyHotlist />} />
             <Route path="/requests" element={<WorkRequests />} />
             <Route path="/chatbot" element={<AIChatbot />} />
             <Route path="/admin" element={<Admin />} />
@@ -50,6 +52,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/hotlist" element={<DailyHotlist />} />
             <Route path="/requests" element={<WorkRequests />} />
             <Route path="/chatbot" element={<AIChatbot />} />
             <Route path="/admin" element={<Admin />} />

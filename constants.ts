@@ -68,6 +68,13 @@ export const REQUEST_PRIORITY_ORDER: Record<RequestPriority, number> = {
   [RequestPriority.Low]: 1,
 };
 
+export const REQUEST_STATUS_ORDER: Record<RequestStatus, number> = {
+  [RequestStatus.InProgress]: 2,
+  [RequestStatus.NewRequest]: 1,
+  [RequestStatus.OnHold]: 0,
+  [RequestStatus.Completed]: 0,
+};
+
 export const REQUEST_PRIORITY_TEXT_COLORS: Record<RequestPriority, string> = {
   [RequestPriority.Critical]: 'text-purple-800 dark:text-purple-300 bg-purple-100 dark:bg-purple-900',
   [RequestPriority.High]: 'text-red-800 dark:text-red-300 bg-red-100 dark:bg-red-900',

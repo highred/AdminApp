@@ -15,17 +15,17 @@ const Dashboard: React.FC = () => {
   const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
 
   useEffect(() => {
-    const savedLayout = localStorage.getItem('dashboardLayout');
+    const savedLayout = localStorage.getItem('dashboardLayout-wide');
     if (savedLayout) {
         setLayout(JSON.parse(savedLayout));
     } else {
         // Generate a default layout if none is saved
         const defaultLayout = programs.map((program, index) => ({
             i: program.id.toString(),
-            x: (index % 3) * 4,
-            y: Math.floor(index / 3) * 5,
-            w: 4,
-            h: 5,
+            x: (index % 2) * 6,
+            y: Math.floor(index / 2) * 7,
+            w: 6,
+            h: 7,
         }));
         setLayout(defaultLayout);
     }
@@ -35,7 +35,7 @@ const Dashboard: React.FC = () => {
   const handleLayoutChange = (newLayout: GridLayout.Layout[]) => {
     // Check if layout has actually changed to avoid unnecessary saves
     if (JSON.stringify(newLayout) !== JSON.stringify(layout)) {
-      localStorage.setItem('dashboardLayout', JSON.stringify(newLayout));
+      localStorage.setItem('dashboardLayout-wide', JSON.stringify(newLayout));
       setLayout(newLayout);
     }
   };
