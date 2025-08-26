@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, forwardRef } from 'react';
 import { RequestStatus, WorkRequest } from '../../types';
 import KanbanCard from './KanbanCard';
 import { KANBAN_COLUMN_COLORS } from '../../constants';
@@ -9,26 +10,29 @@ interface KanbanColumnProps {
     requests: WorkRequest[];
     onDrop: (requestId: number, newStatus: RequestStatus) => void;
     onDeleteRequest: (requestId: number) => void;
+    onCardTouchStart: (e: React.TouchEvent, request: WorkRequest) => void;
+    draggedItemId: number | null;
+    isTouchOver: boolean;
 }
 
-const KanbanColumn: React.FC<KanbanColumnProps> = ({ status, requests, onDrop, onDeleteRequest }) => {
-    const [isOver, setIsOver] = useState(false);
+const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(({ status, requests, onDrop, onDeleteRequest, onCardTouchStart, draggedItemId, isTouchOver }, ref) => {
+    const [isDesktopOver, setIsDesktopOver] = useState(false);
     const { zoomLevel, openWorkRequestModal } = useAppContext();
 
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
-        setIsOver(true);
+        setIsDesktopOver(true);
     };
 
     const handleDragLeave = () => {
-        setIsOver(false);
+        setIsDesktopOver(false);
     };
 
     const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         const requestId = parseInt(e.dataTransfer.getData('requestId'), 10);
         onDrop(requestId, status);
-        setIsOver(false);
+        setIsDesktopOver(false);
     };
 
     const colorClass = KANBAN_COLUMN_COLORS[status];
@@ -41,8 +45,11 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ status, requests, onDrop, o
         }
     };
 
+    const isOver = isDesktopOver || isTouchOver;
+
     return (
         <div 
+            ref={ref}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
@@ -61,11 +68,13 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ status, requests, onDrop, o
                         request={request}
                         onEdit={() => openWorkRequestModal(request, 'edit')}
                         onDelete={onDeleteRequest}
+                        onTouchStart={(e) => onCardTouchStart(e, request)}
+                        isBeingDragged={draggedItemId === request.id}
                     />
                 ))}
             </div>
         </div>
     );
-};
+});
 
 export default KanbanColumn;

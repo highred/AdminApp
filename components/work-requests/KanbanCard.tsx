@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { WorkRequest } from '../../types';
 import PriorityTag from '../shared/PriorityTag';
@@ -8,9 +9,11 @@ interface KanbanCardProps {
     request: WorkRequest;
     onEdit: (request: WorkRequest) => void;
     onDelete: (requestId: number) => void;
+    onTouchStart: (e: React.TouchEvent) => void;
+    isBeingDragged: boolean;
 }
 
-const KanbanCard: React.FC<KanbanCardProps> = ({ request, onEdit, onDelete }) => {
+const KanbanCard: React.FC<KanbanCardProps> = ({ request, onEdit, onDelete, onTouchStart, isBeingDragged }) => {
     const { getSchoolById, getProgramById, zoomLevel } = useAppContext();
     const school = request.schoolId ? getSchoolById(request.schoolId) : null;
     const program = request.programId ? getProgramById(request.programId) : null;
@@ -31,7 +34,8 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ request, onEdit, onDelete }) =>
         <div 
             draggable 
             onDragStart={handleDragStart}
-            className={`relative bg-white dark:bg-gray-800 ${getPaddingClass()} rounded-lg shadow-md cursor-grab active:cursor-grabbing group`}
+            onTouchStart={onTouchStart}
+            className={`relative bg-white dark:bg-gray-800 ${getPaddingClass()} rounded-lg shadow-md cursor-grab active:cursor-grabbing group transition-opacity ${isBeingDragged ? 'opacity-30' : ''}`}
         >
             <div className="absolute bottom-full mb-2 w-72 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg text-sm text-gray-700 dark:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10 left-0">
                 <h4 className="font-bold mb-1 text-gray-800 dark:text-white">Full Description</h4>
