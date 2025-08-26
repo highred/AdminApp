@@ -34,9 +34,9 @@ const Sidebar: React.FC = () => {
           <ClipboardListIcon className={`h-5 w-5 ${!isSidebarCollapsed ? 'mr-3' : ''}`} />
           {!isSidebarCollapsed && 'Work Requests'}
         </NavLink>
-        <NavLink to="/chatbot" className={navLinkClasses} title="AI Chatbot">
+        <NavLink to="/chatbot" className={navLinkClasses} title="AI">
             <ChatIcon className={`h-5 w-5 ${!isSidebarCollapsed ? 'mr-3' : ''}`} />
-            {!isSidebarCollapsed && 'AI Chatbot'}
+            {!isSidebarCollapsed && 'AI'}
         </NavLink>
         <NavLink to="/admin" className={navLinkClasses} title="Admin">
             <CogIcon className={`h-5 w-5 ${!isSidebarCollapsed ? 'mr-3' : ''}`} />

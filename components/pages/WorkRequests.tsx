@@ -35,10 +35,6 @@ const WorkRequests: React.FC = () => {
     const handleAddRequest = () => {
         setModalState({ isOpen: true, request: null, mode: 'new' });
     };
-    
-    const handleEditRequest = (request: WorkRequest) => {
-        setModalState({ isOpen: true, request: request, mode: 'edit' });
-    };
 
     const handleDeleteRequest = (requestId: number) => {
         if (window.confirm('Are you sure you want to delete this work request?')) {
@@ -63,11 +59,11 @@ const WorkRequests: React.FC = () => {
         const requestsToDisplay = programSlug ? filteredRequests : workRequests;
         switch (view) {
             case 'kanban':
-                return <KanbanBoard requests={requestsToDisplay} onEditRequest={handleEditRequest} onDeleteRequest={handleDeleteRequest} onStatusChange={handleStatusChange} />;
+                return <KanbanBoard requests={requestsToDisplay} onDeleteRequest={handleDeleteRequest} onStatusChange={handleStatusChange} />;
             case 'list':
-                return <WorkRequestList requests={requestsToDisplay} onEditRequest={handleEditRequest} onDeleteRequest={handleDeleteRequest} />;
+                return <WorkRequestList requests={requestsToDisplay} onDeleteRequest={handleDeleteRequest} />;
             default:
-                return <KanbanBoard requests={requestsToDisplay} onEditRequest={handleEditRequest} onDeleteRequest={handleDeleteRequest} onStatusChange={handleStatusChange} />;
+                return <KanbanBoard requests={requestsToDisplay} onDeleteRequest={handleDeleteRequest} onStatusChange={handleStatusChange} />;
         }
     };
     

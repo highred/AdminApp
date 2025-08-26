@@ -31,7 +31,7 @@ const Header: React.FC = () => {
     const path = location.pathname;
     
     if (path === '/dashboard') return 'Programs Dashboard';
-    if (path === '/chatbot') return 'AI Chatbot';
+    if (path === '/chatbot') return 'AI Assistant';
     if (path === '/admin') return 'Admin Settings';
     if (path.startsWith('/requests')) {
         const programSlug = searchParams.get('program');

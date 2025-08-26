@@ -1,23 +1,112 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useAppContext } from '../../hooks/useAppContext';
 import { RequestPriority, RequestStatus, WorkRequest } from '../../types';
 import { REQUEST_PRIORITY_TEXT_COLORS } from '../../constants';
-import { PencilIcon, TrashIcon, BuildingIcon, ChevronUpIcon, ChevronDownIcon } from '../icons/Icons';
+import { TrashIcon, BuildingIcon, ChevronUpIcon, ChevronDownIcon } from '../icons/Icons';
 
-type SortableKeys = keyof WorkRequest | 'programName' | 'schoolName';
+type SortableKeys = 'description' | 'programId' | 'schoolId' | 'classroom' | 'requestorName' | 'priority' | 'status' | 'submittedDate' | 'dueDate';
 
 interface WorkRequestListProps {
     requests: WorkRequest[];
-    onEditRequest: (request: WorkRequest) => void;
     onDeleteRequest: (requestId: number) => void;
 }
 
-const WorkRequestList: React.FC<WorkRequestListProps> = ({ requests, onEditRequest, onDeleteRequest }) => {
-  const { schools, programs, zoomLevel } = useAppContext();
+const WorkRequestList: React.FC<WorkRequestListProps> = ({ requests, onDeleteRequest }) => {
+  const { schools, programs, zoomLevel, updateWorkRequest } = useAppContext();
   const [statusFilter, setStatusFilter] = useState<RequestStatus | 'All'>('All');
   const [priorityFilter, setPriorityFilter] = useState<RequestPriority | 'All'>('All');
   const [schoolFilter, setSchoolFilter] = useState<number | 'All'>('All');
-  const [sortConfig, setSortConfig] = useState<{ key: SortableKeys; direction: 'ascending' | 'descending' } | null>({ key: 'submittedDate', direction: 'descending'});
+  const [sortConfig, setSortConfig] = useState<{ key: SortableKeys | 'programName' | 'schoolName'; direction: 'ascending' | 'descending' } | null>({ key: 'submittedDate', direction: 'descending'});
+  const [editingCell, setEditingCell] = useState<{ requestId: number, field: SortableKeys } | null>(null);
+  const inputRef = useRef<HTMLInputElement & HTMLSelectElement & HTMLTextAreaElement>(null);
+
+
+  useEffect(() => {
+    if (editingCell && inputRef.current) {
+        inputRef.current.focus();
+    }
+  }, [editingCell]);
+
+
+  const handleUpdate = async (request: WorkRequest, field: SortableKeys, value: any) => {
+    let updatedRequest = { ...request, [field]: value };
+
+    // Cascading updates
+    if (field === 'programId') {
+        const programIdAsNumber = value ? Number(value) : null;
+        updatedRequest = { ...request, programId: programIdAsNumber, schoolId: null, classroom: '' };
+    } else if (field === 'schoolId' && value === '') {
+        updatedRequest = { ...updatedRequest, schoolId: null, classroom: '' };
+    } else if (field === 'schoolId') {
+        const schoolIdAsNumber = value ? Number(value) : null;
+        updatedRequest = { ...updatedRequest, schoolId: schoolIdAsNumber, classroom: '' };
+    }
+
+    await updateWorkRequest(updatedRequest);
+    setEditingCell(null);
+  };
+
+  const renderEditableCell = (request: WorkRequest, field: SortableKeys) => {
+    if (editingCell?.requestId !== request.id || editingCell?.field !== field) {
+        return null;
+    }
+
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        handleUpdate(request, field, e.target.value);
+    };
+    
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && e.currentTarget.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            e.currentTarget.blur();
+        } else if (e.key === 'Escape') {
+            setEditingCell(null);
+        }
+    }
+
+    switch(field) {
+        case 'description':
+        case 'requestorName':
+        case 'classroom':
+             return <input 
+                ref={inputRef}
+                type="text"
+                defaultValue={request[field] as string || ''} 
+                onBlur={handleBlur}
+                onKeyDown={handleKeyDown}
+                className="w-full bg-inherit p-1 -m-1 border border-primary rounded"
+             />
+        case 'dueDate':
+            return <input
+                ref={inputRef}
+                type="date"
+                defaultValue={request.dueDate || ''}
+                onBlur={handleBlur}
+                onKeyDown={handleKeyDown}
+                className="w-full bg-inherit p-1 -m-1 border border-primary rounded"
+            />
+        case 'priority':
+            return <select ref={inputRef} defaultValue={request.priority} onChange={(e) => handleUpdate(request, field, e.target.value)} onBlur={() => setEditingCell(null)} onKeyDown={handleKeyDown} className="w-full bg-inherit p-1 -m-1 border border-primary rounded">
+                {Object.values(RequestPriority).map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+        case 'status':
+            return <select ref={inputRef} defaultValue={request.status} onChange={(e) => handleUpdate(request, field, e.target.value)} onBlur={() => setEditingCell(null)} onKeyDown={handleKeyDown} className="w-full bg-inherit p-1 -m-1 border border-primary rounded">
+                {Object.values(RequestStatus).map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+        case 'programId':
+            return <select ref={inputRef} defaultValue={request.programId ?? ''} onChange={(e) => handleUpdate(request, field, e.target.value)} onBlur={() => setEditingCell(null)} onKeyDown={handleKeyDown} className="w-full bg-inherit p-1 -m-1 border border-primary rounded">
+                 <option value="">Select Program</option>
+                {programs.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+        case 'schoolId':
+            const availableSchools = request.programId ? schools.filter(s => s.programId === request.programId) : [];
+            return <select ref={inputRef} defaultValue={request.schoolId ?? ''} onChange={(e) => handleUpdate(request, field, e.target.value)} onBlur={() => setEditingCell(null)} onKeyDown={handleKeyDown} className="w-full bg-inherit p-1 -m-1 border border-primary rounded" disabled={!request.programId}>
+                <option value="">None</option>
+                {availableSchools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+        default: return null;
+    }
+  }
 
   const filteredRequests = useMemo(() => {
     return requests.filter(req => {
@@ -61,7 +150,7 @@ const WorkRequestList: React.FC<WorkRequestListProps> = ({ requests, onEditReque
     return sortableItems;
   }, [filteredRequests, sortConfig, programs, schools]);
   
-  const requestSort = (key: SortableKeys) => {
+  const requestSort = (key: SortableKeys | 'programName' | 'schoolName') => {
     let direction: 'ascending' | 'descending' = 'ascending';
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
         direction = 'descending';
@@ -77,7 +166,7 @@ const WorkRequestList: React.FC<WorkRequestListProps> = ({ requests, onEditReque
     }
   }, [zoomLevel]);
 
-  const SortableHeader: React.FC<{ sortKey: SortableKeys, label: string }> = ({ sortKey, label }) => {
+  const SortableHeader: React.FC<{ sortKey: SortableKeys | 'programName' | 'schoolName' , label: string }> = ({ sortKey, label }) => {
     const isSorted = sortConfig?.key === sortKey;
     const icon = isSorted ? (sortConfig?.direction === 'ascending' ? <ChevronUpIcon className="h-4 w-4" /> : <ChevronDownIcon className="h-4 w-4" />) : null;
     return (
@@ -87,6 +176,14 @@ const WorkRequestList: React.FC<WorkRequestListProps> = ({ requests, onEditReque
                 <span className={`transition-opacity ${isSorted ? 'opacity-100' : 'opacity-30 group-hover:opacity-100'}`}>{icon}</span>
             </button>
         </th>
+    )
+  }
+
+  const Cell: React.FC<{ req: WorkRequest, field: SortableKeys, children: React.ReactNode}> = ({req, field, children}) => {
+    return (
+        <td className={`${paddingClass} font-medium relative group max-w-xs truncate cursor-pointer`} onClick={() => setEditingCell({requestId: req.id, field})}>
+            {editingCell?.requestId === req.id && editingCell?.field === field ? renderEditableCell(req, field) : children}
+        </td>
     )
   }
 
@@ -148,33 +245,24 @@ const WorkRequestList: React.FC<WorkRequestListProps> = ({ requests, onEditReque
                 const program = req.programId ? programs.find(p => p.id === req.programId) : null;
                 return (
                     <tr key={req.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-                        <td className={`${paddingClass} font-medium relative group max-w-xs truncate`}>
-                            {req.description}
-                            <div className="absolute bottom-full mb-2 w-72 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg text-sm text-gray-700 dark:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10 left-0">
-                                <h4 className="font-bold mb-1 text-gray-800 dark:text-white">Full Description</h4>
-                                <p className="whitespace-pre-wrap">{req.description}</p>
-                            </div>
-                        </td>
-                        <td className={paddingClass}>{program?.name || 'N/A'}</td>
-                        <td className={paddingClass}>
+                        <Cell req={req} field="description">{req.description}</Cell>
+                        <Cell req={req} field="programId">{program?.name || 'N/A'}</Cell>
+                        <Cell req={req} field="schoolId">
                            <div className="flex items-center">
                                 <BuildingIcon className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0" />
                                 <span>{school?.name || 'N/A'}</span>
                             </div>
-                        </td>
-                        <td className={paddingClass}>{req.classroom || 'N/A'}</td>
-                        <td className={paddingClass}>{req.requestorName || 'N/A'}</td>
-                        <td className={paddingClass}>
+                        </Cell>
+                        <Cell req={req} field="classroom">{req.classroom || 'N/A'}</Cell>
+                        <Cell req={req} field="requestorName">{req.requestorName || 'N/A'}</Cell>
+                        <Cell req={req} field="priority">
                             <span className={`px-2 py-1 text-xs font-medium rounded-full ${priorityColor}`}>{req.priority}</span>
-                        </td>
-                        <td className={paddingClass}>{req.status}</td>
+                        </Cell>
+                        <Cell req={req} field="status">{req.status}</Cell>
                         <td className={paddingClass}>{req.submittedDate}</td>
-                        <td className={paddingClass}>{req.dueDate || 'Unassigned'}</td>
+                        <Cell req={req} field="dueDate">{req.dueDate || 'Unassigned'}</Cell>
                         <td className={paddingClass}>
                             <div className="flex items-center space-x-3">
-                                <button onClick={() => onEditRequest(req)} className="text-gray-400 hover:text-primary dark:hover:text-indigo-400" aria-label="Edit request">
-                                    <PencilIcon className="h-5 w-5" />
-                                </button>
                                 <button onClick={() => onDeleteRequest(req.id)} className="text-gray-400 hover:text-red-500" aria-label="Delete request">
                                     <TrashIcon className="h-5 w-5" />
                                 </button>

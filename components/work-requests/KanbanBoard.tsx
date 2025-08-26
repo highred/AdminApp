@@ -5,12 +5,11 @@ import KanbanColumn from './KanbanColumn';
 
 interface KanbanBoardProps {
     requests: WorkRequest[];
-    onEditRequest: (request: WorkRequest) => void;
     onDeleteRequest: (requestId: number) => void;
     onStatusChange: (requestId: number, newStatus: RequestStatus, oldStatus: RequestStatus) => void;
 }
 
-const KanbanBoard: React.FC<KanbanBoardProps> = ({ requests, onEditRequest, onDeleteRequest, onStatusChange }) => {
+const KanbanBoard: React.FC<KanbanBoardProps> = ({ requests, onDeleteRequest, onStatusChange }) => {
 
     const columns: RequestStatus[] = [
         RequestStatus.NewRequest,
@@ -38,7 +37,6 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ requests, onEditRequest, onDe
                     status={status}
                     requests={getRequestsByStatus(status)}
                     onDrop={onDrop}
-                    onEditRequest={onEditRequest}
                     onDeleteRequest={onDeleteRequest}
                 />
             ))}
