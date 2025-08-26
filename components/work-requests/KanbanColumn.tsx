@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, forwardRef } from 'react';
 import { RequestStatus, WorkRequest } from '../../types';
 import KanbanCard from './KanbanCard';
@@ -11,7 +12,7 @@ interface KanbanColumnProps {
     requests: WorkRequest[];
     onDrop: (requestId: number, newStatus: RequestStatus) => void;
     onDeleteRequest: (requestId: number) => void;
-    onCardLongPressStart: (e: React.TouchEvent, request: WorkRequest) => void;
+    onCardLongPressStart: (cardElement: HTMLElement, request: WorkRequest) => void;
     draggedItemId: number | null;
     isTouchOver: boolean;
 }

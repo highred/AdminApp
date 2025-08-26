@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { WorkRequest } from '../../types';
 import PriorityTag from '../shared/PriorityTag';
@@ -8,10 +7,9 @@ import { useAppContext } from '../../hooks/useAppContext';
 
 interface KanbanCardProps {
     request: WorkRequest;
-    // FIX: Changed onEdit prop to not expect any arguments, as the parent component (`KanbanColumn`) provides a handler with the `request` object already in its closure scope.
     onEdit: () => void;
     onDelete: (requestId: number) => void;
-    onLongPressStart: (e: React.TouchEvent, request: WorkRequest) => void;
+    onLongPressStart: (cardElement: HTMLElement, request: WorkRequest) => void;
     isBeingDragged: boolean;
 }
 
@@ -19,7 +17,8 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ request, onEdit, onDelete, onLo
     const { getSchoolById, getProgramById, zoomLevel } = useAppContext();
     const school = request.schoolId ? getSchoolById(request.schoolId) : null;
     const program = request.programId ? getProgramById(request.programId) : null;
-    const longPressTimer = React.useRef<number>();
+    // FIX: Initialize useRef with null. This can prevent errors if tooling expects an initial value.
+    const longPressTimer = React.useRef<number | null>(null);
     const touchStartPos = React.useRef<{ x: number; y: number } | null>(null);
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
@@ -42,11 +41,10 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ request, onEdit, onDelete, onLo
         
         touchStartPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
         
-        // Use a variable to hold the event reference for the timeout
-        const eventForTimeout = e;
+        const cardElement = e.currentTarget as HTMLElement;
         
         longPressTimer.current = window.setTimeout(() => {
-            onLongPressStart(eventForTimeout, request);
+            onLongPressStart(cardElement, request);
         }, 1000); // 1 second delay
     };
 
@@ -58,13 +56,17 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ request, onEdit, onDelete, onLo
 
         // If user moves more than 10px, it's a scroll, so cancel the long press
         if (moveX > 10 || moveY > 10) {
-            clearTimeout(longPressTimer.current);
+            if (longPressTimer.current) {
+                clearTimeout(longPressTimer.current);
+            }
             touchStartPos.current = null;
         }
     };
     
     const handleTouchEnd = () => {
-        clearTimeout(longPressTimer.current);
+        if (longPressTimer.current) {
+            clearTimeout(longPressTimer.current);
+        }
         touchStartPos.current = null;
     };
 
@@ -87,7 +89,6 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ request, onEdit, onDelete, onLo
                 <p className="font-semibold text-gray-800 dark:text-white truncate pr-2 flex-grow">{request.description}</p>
                 <div className="flex items-center space-x-2 flex-shrink-0">
                      <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-2">
-                        {/* FIX: Changed onClick handler to directly use the onEdit prop, which is now of type () => void. */}
                         <button onClick={onEdit} className="text-gray-400 hover:text-primary dark:hover:text-indigo-400" aria-label="Edit request">
                             <PencilIcon className="h-4 w-4" />
                         </button>

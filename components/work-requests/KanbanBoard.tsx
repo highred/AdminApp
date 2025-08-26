@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { RequestStatus, WorkRequest } from '../../types';
 import KanbanColumn from './KanbanColumn';
@@ -54,9 +55,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ requests, onDeleteRequest, on
     const boardRef = useRef<HTMLDivElement>(null);
 
 
-    const initiateMobileDrag = useCallback((e: React.TouchEvent, request: WorkRequest) => {
-        const cardElement = e.currentTarget as HTMLElement;
-
+    const initiateMobileDrag = useCallback((cardElement: HTMLElement, request: WorkRequest) => {
         // Create a ghost element for visual feedback
         const rect = cardElement.getBoundingClientRect();
         const ghost = cardElement.cloneNode(true) as HTMLElement;
@@ -111,7 +110,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ requests, onDeleteRequest, on
         // Auto-scroll kanban board
         if (boardRef.current) {
             const boardRect = boardRef.current.getBoundingClientRect();
-            const scrollSpeed = 10;
+            const scrollSpeed = 25; // Increased scroll speed
             if(touch.clientX > boardRect.right - 50) {
                 boardRef.current.scrollLeft += scrollSpeed;
             } else if (touch.clientX < boardRect.left + 50) {
