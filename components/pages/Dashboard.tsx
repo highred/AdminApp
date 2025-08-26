@@ -4,6 +4,7 @@ import GridLayout from 'react-grid-layout';
 import { useAppContext } from '../../hooks/useAppContext';
 import useMediaQuery from '../../hooks/useMediaQuery';
 import ProgramCard from '../dashboard/ProgramCard';
+import AnalyticsWidget from '../dashboard/AnalyticsWidget';
 import { PlusIcon, SaveIcon, FireIcon } from '../icons/Icons';
 
 const Dashboard: React.FC = () => {
@@ -16,25 +17,37 @@ const Dashboard: React.FC = () => {
   const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
 
   const generateDefaultLayout = useCallback(() => {
-    return programs.map((program, index) => ({
+    const analyticsLayout = { i: 'analytics-widget', x: 0, y: 0, w: 12, h: 7 };
+    const programLayouts = programs.map((program, index) => ({
       i: program.id.toString(),
       x: (index % 2) * 6,
-      y: Math.floor(index / 2) * 7,
+      y: Math.floor(index / 2) * 7 + 7, // Offset by analytics widget height
       w: 6,
       h: 7,
     }));
+    return [analyticsLayout, ...programLayouts];
   }, [programs]);
 
   useEffect(() => {
-    // Initialize layout only once when programs are loaded
     if (programs.length > 0 && !isLayoutInitialized) {
-      const storedLayout = localStorage.getItem('dashboardLayout-wide');
-      let initialLayout;
-      if (storedLayout) {
-        initialLayout = JSON.parse(storedLayout);
+      const storedLayoutJSON = localStorage.getItem('dashboardLayout-wide');
+      let initialLayout: GridLayout.Layout[];
+
+      if (storedLayoutJSON) {
+        let storedLayout = JSON.parse(storedLayoutJSON);
+        
+        const hasAnalyticsWidget = storedLayout.some((item: GridLayout.Layout) => item.i === 'analytics-widget');
+
+        if (!hasAnalyticsWidget) {
+          const maxY = Math.max(0, ...storedLayout.map((item: GridLayout.Layout) => item.y + item.h));
+          const newAnalyticsWidgetLayout = { i: 'analytics-widget', x: 0, y: maxY, w: 12, h: 7 };
+          storedLayout.push(newAnalyticsWidgetLayout);
+        }
+        initialLayout = storedLayout;
       } else {
         initialLayout = generateDefaultLayout();
       }
+      
       setCurrentLayout(initialLayout);
       setSavedLayout(initialLayout);
       setIsLayoutInitialized(true);
@@ -42,10 +55,9 @@ const Dashboard: React.FC = () => {
   }, [programs, isLayoutInitialized, generateDefaultLayout]);
 
   useEffect(() => {
-    // Detect if layout has changed from the saved state
     if (!isLayoutInitialized) return;
-    const current = JSON.stringify(currentLayout);
-    const saved = JSON.stringify(savedLayout);
+    const current = JSON.stringify(currentLayout.map(l => ({ i: l.i, x: l.x, y: l.y, w: l.w, h: l.h })));
+    const saved = JSON.stringify(savedLayout.map(l => ({ i: l.i, x: l.x, y: l.y, w: l.w, h: l.h })));
     setHasUnsavedChanges(current !== saved);
   }, [currentLayout, savedLayout, isLayoutInitialized]);
 
@@ -117,6 +129,9 @@ const Dashboard: React.FC = () => {
                   onLayoutChange={handleLayoutChange}
                   draggableHandle=".drag-handle"
               >
+                  <div key="analytics-widget" className="bg-white dark:bg-dark-card rounded-xl shadow-md overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                    <AnalyticsWidget />
+                  </div>
                   {programs.map(program => (
                       <div key={program.id.toString()} className="bg-white dark:bg-dark-card rounded-xl shadow-md overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
                         <ProgramCard program={program} />
