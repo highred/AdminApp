@@ -5,7 +5,7 @@ import { useAppContext } from '../../hooks/useAppContext';
 import useMediaQuery from '../../hooks/useMediaQuery';
 import ProgramCard from '../dashboard/ProgramCard';
 import WorkRequestModal from '../work-requests/WorkRequestModal';
-import { PlusIcon, SaveIcon } from '../icons/Icons';
+import { PlusIcon, SaveIcon, FireIcon } from '../icons/Icons';
 
 const Dashboard: React.FC = () => {
   const { programs } = useAppContext();
@@ -76,9 +76,15 @@ const Dashboard: React.FC = () => {
             </button>
         </div>
         
-        <Link to="/requests" className="mt-8 mb-4 text-primary dark:text-indigo-400 hover:underline font-medium">
-            View All Work Requests &rarr;
-        </Link>
+        <div className="flex-shrink-0 w-full max-w-xs pb-4 text-center">
+            <Link to="/hotlist" className="flex items-center justify-center w-full px-6 py-3 mb-3 bg-white dark:bg-dark-card border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-xl shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 transition font-semibold">
+                <FireIcon className="h-5 w-5 mr-2 text-red-500" />
+                View Daily Hotlist
+            </Link>
+            <Link to="/requests" className="text-gray-500 dark:text-gray-400 hover:underline text-sm font-medium">
+                View All Work Requests &rarr;
+            </Link>
+        </div>
         
         <WorkRequestModal
             isOpen={isModalOpen}
