@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { RequestStatus, WorkRequest } from '../../types';
 import KanbanColumn from './KanbanColumn';
@@ -53,7 +54,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ requests, onDeleteRequest, on
     const boardRef = useRef<HTMLDivElement>(null);
 
 
-    const handleTouchStart = useCallback((e: React.TouchEvent, request: WorkRequest) => {
+    const initiateMobileDrag = useCallback((e: React.TouchEvent, request: WorkRequest) => {
         const cardElement = e.currentTarget as HTMLElement;
 
         // Create a ghost element for visual feedback
@@ -159,14 +160,13 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ requests, onDeleteRequest, on
         <div ref={boardRef} className="flex h-full space-x-4 overflow-x-auto p-2 -mx-2">
             {columns.map(status => (
                 <KanbanColumn 
-                    // FIX: Changed the ref callback to have a block body, ensuring it returns void and satisfies the Ref<HTMLDivElement> type.
-                    ref={el => { columnRefs.current[status] = el; }}
+                    ref={(el) => { columnRefs.current[status] = el; }}
                     key={status} 
                     status={status}
                     requests={getRequestsByStatus(status)}
                     onDrop={onDrop}
                     onDeleteRequest={onDeleteRequest}
-                    onCardTouchStart={handleTouchStart}
+                    onCardLongPressStart={initiateMobileDrag}
                     draggedItemId={draggedItem ? draggedItem.id : null}
                     isTouchOver={overColumn === status}
                 />

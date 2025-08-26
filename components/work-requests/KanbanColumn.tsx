@@ -1,4 +1,5 @@
 
+
 import React, { useState, forwardRef } from 'react';
 import { RequestStatus, WorkRequest } from '../../types';
 import KanbanCard from './KanbanCard';
@@ -10,12 +11,12 @@ interface KanbanColumnProps {
     requests: WorkRequest[];
     onDrop: (requestId: number, newStatus: RequestStatus) => void;
     onDeleteRequest: (requestId: number) => void;
-    onCardTouchStart: (e: React.TouchEvent, request: WorkRequest) => void;
+    onCardLongPressStart: (e: React.TouchEvent, request: WorkRequest) => void;
     draggedItemId: number | null;
     isTouchOver: boolean;
 }
 
-const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(({ status, requests, onDrop, onDeleteRequest, onCardTouchStart, draggedItemId, isTouchOver }, ref) => {
+const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(({ status, requests, onDrop, onDeleteRequest, onCardLongPressStart, draggedItemId, isTouchOver }, ref) => {
     const [isDesktopOver, setIsDesktopOver] = useState(false);
     const { zoomLevel, openWorkRequestModal } = useAppContext();
 
@@ -68,7 +69,7 @@ const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(({ status, re
                         request={request}
                         onEdit={() => openWorkRequestModal(request, 'edit')}
                         onDelete={onDeleteRequest}
-                        onTouchStart={(e) => onCardTouchStart(e, request)}
+                        onLongPressStart={onCardLongPressStart}
                         isBeingDragged={draggedItemId === request.id}
                     />
                 ))}
