@@ -1,5 +1,5 @@
 import React, { createContext, useState, useCallback, ReactNode, useEffect } from 'react';
-import { Program, School, Classroom, WorkRequest, RequestStatus, ZoomLevel, Theme } from '../types';
+import { Program, School, Classroom, WorkRequest, RequestStatus, ZoomLevel, Theme, ModalState, ModalMode } from '../types';
 import { supabase } from '../supabaseClient'; // Import the Supabase client
 
 type AddWorkRequestData = Omit<WorkRequest, 'id' | 'status' | 'submittedDate' | 'dueDate'>;
@@ -12,10 +12,13 @@ interface AppContextType {
   isSidebarCollapsed: boolean;
   zoomLevel: ZoomLevel;
   theme: Theme;
+  modalState: ModalState;
 
   toggleSidebar: () => void;
   setZoomLevel: (level: ZoomLevel) => void;
   setTheme: (theme: Theme) => void;
+  openWorkRequestModal: (request: WorkRequest | null, mode: ModalMode) => void;
+  closeWorkRequestModal: () => void;
 
   addProgram: (name: string) => Promise<void>;
   updateProgram: (program: Program) => Promise<void>;
@@ -58,6 +61,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
     return 'system';
   });
+  const [modalState, setModalState] = useState<ModalState>({ isOpen: false, request: null, mode: 'new' });
+
 
   // --- THEME MANAGEMENT ---
   useEffect(() => {
@@ -133,6 +138,14 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   // --- UI MANAGEMENT ---
   const toggleSidebar = useCallback(() => setIsSidebarCollapsed(prev => !prev), []);
+  const openWorkRequestModal = useCallback((request: WorkRequest | null, mode: ModalMode) => {
+    setModalState({ isOpen: true, request, mode });
+  }, []);
+
+  const closeWorkRequestModal = useCallback(() => {
+    setModalState(prev => ({ ...prev, isOpen: false }));
+  }, []);
+
 
   // --- CRUD OPERATIONS ---
   const addProgram = async (name: string) => {
@@ -232,9 +245,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     isSidebarCollapsed,
     zoomLevel,
     theme,
+    modalState,
     toggleSidebar,
     setZoomLevel,
     setTheme,
+    openWorkRequestModal,
+    closeWorkRequestModal,
     addProgram,
     updateProgram,
     addSchool,

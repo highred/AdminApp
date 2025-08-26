@@ -11,9 +11,10 @@ import AIChatbot from './components/pages/AIChatbot';
 import Admin from './components/pages/Admin';
 import { useAppContext } from './hooks/useAppContext';
 import useMediaQuery from './hooks/useMediaQuery';
+import WorkRequestModal from './components/work-requests/WorkRequestModal';
 
 const App: React.FC = () => {
-  const { zoomLevel } = useAppContext();
+  const { zoomLevel, modalState, closeWorkRequestModal } = useAppContext();
   const isMobile = useMediaQuery('(max-width: 768px)');
   
   const getZoomClass = () => {
@@ -23,6 +24,15 @@ const App: React.FC = () => {
       default: return 'text-sm';
     }
   };
+
+  const globalModal = (
+     <WorkRequestModal
+        isOpen={modalState.isOpen}
+        onClose={closeWorkRequestModal}
+        request={modalState.request}
+        mode={modalState.mode}
+      />
+  );
 
   if (isMobile) {
     return (
@@ -39,6 +49,7 @@ const App: React.FC = () => {
             <Route path="/schools/:schoolId" element={<SchoolProfile />} />
           </Routes>
         </main>
+        {globalModal}
       </div>
     );
   }
@@ -60,6 +71,7 @@ const App: React.FC = () => {
           </Routes>
         </main>
       </div>
+      {globalModal}
     </div>
   );
 };

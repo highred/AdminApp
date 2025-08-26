@@ -6,23 +6,14 @@ import KanbanBoard from '../work-requests/KanbanBoard';
 import { PlusIcon } from '../icons/Icons';
 import { WorkRequest, RequestStatus } from '../../types';
 import WorkRequestList from '../work-requests/WorkRequestList';
-import WorkRequestModal from '../work-requests/WorkRequestModal';
 import { programToSlug } from '../../constants';
-
-type ModalState = {
-    isOpen: boolean;
-    request: WorkRequest | null;
-    mode: 'new' | 'edit' | 'update-status' | 'update-hold-status';
-}
 
 const WorkRequests: React.FC = () => {
     const [view, setView] = useState('kanban'); // 'kanban', 'list'
     const [kanbanSort, setKanbanSort] = useState<'priority' | 'recent'>('priority');
-    const { workRequests, programs, deleteWorkRequest, updateWorkRequestStatus } = useAppContext();
+    const { workRequests, programs, deleteWorkRequest, updateWorkRequestStatus, openWorkRequestModal } = useAppContext();
     const [searchParams] = useSearchParams();
     const programSlug = searchParams.get('program');
-
-    const [modalState, setModalState] = useState<ModalState>({ isOpen: false, request: null, mode: 'new' });
 
     const filteredRequests = useMemo(() => {
         if (!programSlug) return workRequests;
@@ -34,7 +25,7 @@ const WorkRequests: React.FC = () => {
     }, [programSlug, workRequests, programs]);
 
     const handleAddRequest = () => {
-        setModalState({ isOpen: true, request: null, mode: 'new' });
+        openWorkRequestModal(null, 'new');
     };
 
     const handleDeleteRequest = (requestId: number) => {
@@ -48,9 +39,9 @@ const WorkRequests: React.FC = () => {
         if (!requestToUpdate) return;
     
         if (oldStatus === RequestStatus.NewRequest && newStatus === RequestStatus.InProgress) {
-            setModalState({ isOpen: true, request: requestToUpdate, mode: 'update-status' });
+            openWorkRequestModal(requestToUpdate, 'update-status');
         } else if (newStatus === RequestStatus.OnHold) {
-            setModalState({ isOpen: true, request: requestToUpdate, mode: 'update-hold-status' });
+            openWorkRequestModal(requestToUpdate, 'update-hold-status');
         } else {
             updateWorkRequestStatus(requestId, newStatus);
         }
@@ -103,12 +94,6 @@ const WorkRequests: React.FC = () => {
             <div className="flex-1 overflow-hidden">
                 {renderView()}
             </div>
-            <WorkRequestModal
-                isOpen={modalState.isOpen}
-                onClose={() => setModalState(prev => ({...prev, isOpen: false}))}
-                request={modalState.request}
-                mode={modalState.mode}
-            />
         </div>
     );
 };

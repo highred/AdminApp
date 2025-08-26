@@ -3,7 +3,6 @@ import { RequestStatus, WorkRequest } from '../../types';
 import KanbanCard from './KanbanCard';
 import { KANBAN_COLUMN_COLORS } from '../../constants';
 import { useAppContext } from '../../hooks/useAppContext';
-import WorkRequestModal from './WorkRequestModal';
 
 interface KanbanColumnProps {
     status: RequestStatus;
@@ -14,8 +13,7 @@ interface KanbanColumnProps {
 
 const KanbanColumn: React.FC<KanbanColumnProps> = ({ status, requests, onDrop, onDeleteRequest }) => {
     const [isOver, setIsOver] = useState(false);
-    const { zoomLevel } = useAppContext();
-    const [editingRequest, setEditingRequest] = useState<WorkRequest | null>(null);
+    const { zoomLevel, openWorkRequestModal } = useAppContext();
 
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
@@ -61,19 +59,11 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ status, requests, onDrop, o
                     <KanbanCard 
                         key={request.id} 
                         request={request}
-                        onEdit={() => setEditingRequest(request)}
+                        onEdit={() => openWorkRequestModal(request, 'edit')}
                         onDelete={onDeleteRequest}
                     />
                 ))}
             </div>
-            {editingRequest && (
-                <WorkRequestModal
-                    isOpen={!!editingRequest}
-                    onClose={() => setEditingRequest(null)}
-                    request={editingRequest}
-                    mode={'edit'}
-                />
-            )}
         </div>
     );
 };

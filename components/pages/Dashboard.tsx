@@ -4,13 +4,11 @@ import GridLayout from 'react-grid-layout';
 import { useAppContext } from '../../hooks/useAppContext';
 import useMediaQuery from '../../hooks/useMediaQuery';
 import ProgramCard from '../dashboard/ProgramCard';
-import WorkRequestModal from '../work-requests/WorkRequestModal';
 import { PlusIcon, SaveIcon, FireIcon } from '../icons/Icons';
 
 const Dashboard: React.FC = () => {
-  const { programs } = useAppContext();
+  const { programs, openWorkRequestModal } = useAppContext();
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const [isModalOpen, setIsModalOpen] = useState(false);
   
   const [currentLayout, setCurrentLayout] = useState<GridLayout.Layout[]>([]);
   const [savedLayout, setSavedLayout] = useState<GridLayout.Layout[]>([]);
@@ -68,7 +66,7 @@ const Dashboard: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Welcome, Admin!</h1>
             <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-sm">Ready to get things done? Add a new work request to get started.</p>
             <button 
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => openWorkRequestModal(null, 'new')}
                 className="flex items-center justify-center w-full max-w-xs px-6 py-4 bg-primary text-white rounded-xl shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition text-lg font-semibold"
             >
                 <PlusIcon className="h-6 w-6 mr-3" />
@@ -85,13 +83,6 @@ const Dashboard: React.FC = () => {
                 View All Work Requests &rarr;
             </Link>
         </div>
-        
-        <WorkRequestModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            request={null}
-            mode={'new'}
-        />
       </div>
     );
   }

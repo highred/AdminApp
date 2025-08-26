@@ -46,3 +46,11 @@ export interface WorkRequest {
 
 export type ZoomLevel = 'sm' | 'md' | 'lg';
 export type Theme = 'light' | 'dark' | 'system';
+
+export type ModalMode = 'new' | 'edit' | 'update-status' | 'update-hold-status';
+
+export type ModalState = {
+  isOpen: boolean;
+  request: WorkRequest | null;
+  mode: ModalMode;
+};
