@@ -22,8 +22,8 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ request, onEdit, onDelete }) =>
     const getPaddingClass = () => {
         switch(zoomLevel) {
             case 'sm': return 'p-2';
-            case 'lg': return 'p-5';
-            default: return 'p-4';
+            case 'lg': return 'p-4';
+            default: return 'p-3';
         }
     };
 
@@ -37,8 +37,10 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ request, onEdit, onDelete }) =>
                 <h4 className="font-bold mb-1 text-gray-800 dark:text-white">Full Description</h4>
                 <p className="whitespace-pre-wrap">{request.description}</p>
             </div>
-            <div className="flex justify-end items-start">
-                <div className="flex items-center space-x-2">
+            
+            <div className="flex justify-between items-start gap-2">
+                <p className="font-semibold text-gray-800 dark:text-white truncate pr-2 flex-grow">{request.description}</p>
+                <div className="flex items-center space-x-2 flex-shrink-0">
                      <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-2">
                         <button onClick={() => onEdit(request)} className="text-gray-400 hover:text-primary dark:hover:text-indigo-400" aria-label="Edit request">
                             <PencilIcon className="h-4 w-4" />
@@ -50,9 +52,8 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ request, onEdit, onDelete }) =>
                     <PriorityTag priority={request.priority} />
                 </div>
             </div>
-            <p className="mt-2 font-semibold text-gray-800 dark:text-white truncate">{request.description}</p>
             
-            <div className="mt-3 space-y-2">
+            <div className="mt-2 space-y-1">
                 {program && (
                     <div className="flex items-center text-gray-500 dark:text-gray-400">
                         <BookOpenIcon className="h-4 w-4 mr-2 flex-shrink-0 text-gray-400" />
@@ -70,7 +71,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ request, onEdit, onDelete }) =>
                 </div>
             </div>
 
-            <div className="mt-4 flex justify-between items-center">
+            <div className="mt-3 flex justify-between items-center">
                 <span className="text-xs text-gray-600 dark:text-gray-300">{request.requestorName}</span>
                 <span className="text-xs text-gray-500 dark:text-gray-400">{request.submittedDate}</span>
             </div>

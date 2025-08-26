@@ -204,6 +204,11 @@ const WorkRequestModal: React.FC<WorkRequestModalProps> = ({ isOpen, onClose, re
             setIsSubmitting(false);
             return;
         }
+        if (mode !== 'edit' && !selectedProgramId) {
+             alert("Program is a required field. Please select a program.");
+             setIsSubmitting(false);
+             return;
+        }
         
         const submissionData = {
           description: formData.description,
@@ -313,7 +318,7 @@ const WorkRequestModal: React.FC<WorkRequestModalProps> = ({ isOpen, onClose, re
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label htmlFor="program" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Program</label>
+                                <label htmlFor="program" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Program <span className="text-red-500">*</span></label>
                                 <select name="program" id="program" value={selectedProgramId} onChange={handleChange} className="mt-1 w-full form-input">
                                   <option value="">Select a Program</option>
                                   {programs.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}

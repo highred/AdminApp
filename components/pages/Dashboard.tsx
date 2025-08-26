@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import GridLayout from 'react-grid-layout';
 import { useAppContext } from '../../hooks/useAppContext';
 import useMediaQuery from '../../hooks/useMediaQuery';
 import ProgramCard from '../dashboard/ProgramCard';
@@ -7,15 +8,35 @@ import WorkRequestModal from '../work-requests/WorkRequestModal';
 import { PlusIcon } from '../icons/Icons';
 
 const Dashboard: React.FC = () => {
-  const { programs, zoomLevel } = useAppContext();
+  const { programs } = useAppContext();
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [layout, setLayout] = useState<GridLayout.Layout[]>([]);
+  const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
 
-  const getGridCols = () => {
-    switch (zoomLevel) {
-      case 'sm': return 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5';
-      case 'lg': return 'grid-cols-1 md:grid-cols-2';
-      default: return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
+  useEffect(() => {
+    const savedLayout = localStorage.getItem('dashboardLayout');
+    if (savedLayout) {
+        setLayout(JSON.parse(savedLayout));
+    } else {
+        // Generate a default layout if none is saved
+        const defaultLayout = programs.map((program, index) => ({
+            i: program.id.toString(),
+            x: (index % 3) * 4,
+            y: Math.floor(index / 3) * 5,
+            w: 4,
+            h: 5,
+        }));
+        setLayout(defaultLayout);
+    }
+    setIsLayoutInitialized(true);
+  }, [programs]);
+
+  const handleLayoutChange = (newLayout: GridLayout.Layout[]) => {
+    // Check if layout has actually changed to avoid unnecessary saves
+    if (JSON.stringify(newLayout) !== JSON.stringify(layout)) {
+      localStorage.setItem('dashboardLayout', JSON.stringify(newLayout));
+      setLayout(newLayout);
     }
   };
 
@@ -48,13 +69,28 @@ const Dashboard: React.FC = () => {
     );
   }
   
+  // Render nothing until the layout has been initialized to prevent FOUC
+  if (!isLayoutInitialized) {
+    return null;
+  }
+  
   return (
-      <div className="space-y-6 h-full overflow-y-auto">
-          <div className={`grid ${getGridCols()} gap-6`}>
+      <div className="h-full overflow-y-auto">
+          <GridLayout
+              className="layout"
+              layout={layout}
+              cols={12}
+              rowHeight={50}
+              width={1200}
+              onLayoutChange={handleLayoutChange}
+              draggableHandle=".drag-handle"
+          >
               {programs.map(program => (
-                  <ProgramCard key={program.id} program={program} />
+                  <div key={program.id.toString()} className="bg-white dark:bg-dark-card rounded-xl shadow-md overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                    <ProgramCard program={program} />
+                  </div>
               ))}
-          </div>
+          </GridLayout>
       </div>
   );
 };

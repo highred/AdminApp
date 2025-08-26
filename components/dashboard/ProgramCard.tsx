@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAppContext } from '../../hooks/useAppContext';
 import { RequestStatus, Program, WorkRequest } from '../../types';
-import { ClipboardListIcon, SchoolIcon, BuildingIcon, PauseIcon } from '../icons/Icons';
+import { ClipboardListIcon, SchoolIcon, BuildingIcon, PauseIcon, GripVerticalIcon } from '../icons/Icons';
 import { programToSlug, REQUEST_PRIORITY_ORDER, REQUEST_PRIORITY_COLORS } from '../../constants';
 
 interface ProgramCardProps {
@@ -60,53 +60,60 @@ const ProgramCard: React.FC<ProgramCardProps> = ({ program }) => {
 
 
     return (
-        <Link to={`/requests?program=${programToSlug(program.name)}`} className="bg-white dark:bg-dark-card rounded-xl shadow-md overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex">
+        <div className="flex flex-col h-full w-full">
             <style>{`.line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }`}</style>
-            <div className="p-6 flex flex-col h-full w-full">
-                <h2 className="text-xl font-bold text-primary dark:text-indigo-400">{program.name}</h2>
+            <div className="p-6 flex flex-col flex-grow">
+                <div className="flex justify-between items-start">
+                    <h2 className="text-xl font-bold text-primary dark:text-indigo-400">{program.name}</h2>
+                    <div className="drag-handle cursor-move p-1 -mt-1 -mr-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <GripVerticalIcon className="h-5 w-5" />
+                    </div>
+                </div>
                 
-                <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-gray-600 dark:text-gray-300">
-                    <div className="flex items-center">
-                        <SchoolIcon className="h-5 w-5 mr-3 text-secondary" />
-                        <span className="truncate">{programData.schoolCount} {programData.schoolCount === 1 ? 'School' : 'Schools'}</span>
+                <Link to={`/requests?program=${programToSlug(program.name)}`} className="flex flex-col flex-grow">
+                    <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-gray-600 dark:text-gray-300">
+                        <div className="flex items-center">
+                            <SchoolIcon className="h-5 w-5 mr-3 text-secondary" />
+                            <span className="truncate">{programData.schoolCount} {programData.schoolCount === 1 ? 'School' : 'Schools'}</span>
+                        </div>
+                        <div className="flex items-center">
+                            <ClipboardListIcon className="h-5 w-5 mr-3 text-yellow-500" />
+                            <span className="truncate">{programData.openRequestCount} Open</span>
+                        </div>
+                        <div className="flex items-center">
+                            <BuildingIcon className="h-5 w-5 mr-3 text-indigo-500" />
+                            <span className="truncate">{programData.totalClassrooms} Classrooms</span>
+                        </div>
+                        <div className="flex items-center">
+                            <PauseIcon className="h-5 w-5 mr-3 text-gray-500" />
+                            <span className="truncate">{programData.onHoldRequestCount} On Hold</span>
+                        </div>
                     </div>
-                    <div className="flex items-center">
-                        <ClipboardListIcon className="h-5 w-5 mr-3 text-yellow-500" />
-                        <span className="truncate">{programData.openRequestCount} Open</span>
-                    </div>
-                    <div className="flex items-center">
-                        <BuildingIcon className="h-5 w-5 mr-3 text-indigo-500" />
-                        <span className="truncate">{programData.totalClassrooms} Classrooms</span>
-                    </div>
-                    <div className="flex items-center">
-                        <PauseIcon className="h-5 w-5 mr-3 text-gray-500" />
-                        <span className="truncate">{programData.onHoldRequestCount} On Hold</span>
-                    </div>
-                </div>
 
-                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex-1 flex flex-col">
-                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex-shrink-0">Top Priorities</h3>
-                    <div className="flex-1">
-                        {topPriorities.length > 0 ? (
-                            <ul className="space-y-2">
-                                {topPriorities.map(req => (
-                                    <li key={req.id} className="text-xs text-gray-600 dark:text-gray-400">
-                                        <div className="flex items-start" title={req.description}>
-                                            <span className={`w-2 h-2 rounded-full mr-2 mt-1 flex-shrink-0 ${REQUEST_PRIORITY_COLORS[req.priority]}`}></span>
-                                            <span className="line-clamp-2">{req.description}</span>
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <div className="flex items-center justify-center h-full">
-                                <p className="text-xs text-gray-500 dark:text-gray-400">No open requests to prioritize.</p>
-                            </div>
-                        )}
+                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex-1 flex flex-col">
+                        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex-shrink-0">Top Priorities</h3>
+                        <div className="flex-1">
+                            {topPriorities.length > 0 ? (
+                                <ul className="space-y-2">
+                                    {topPriorities.map(req => (
+                                        <li key={req.id} className="text-xs text-gray-600 dark:text-gray-400">
+                                            <div className="flex items-start" title={req.description}>
+                                                <span className={`w-2 h-2 rounded-full mr-2 mt-1 flex-shrink-0 ${REQUEST_PRIORITY_COLORS[req.priority]}`}></span>
+                                                <span className="line-clamp-2">{req.description}</span>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <div className="flex items-center justify-center h-full">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">No open requests to prioritize.</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
+                </Link>
             </div>
-        </Link>
+        </div>
     );
 };
 
