@@ -12,9 +12,10 @@ import Admin from './components/pages/Admin';
 import { useAppContext } from './hooks/useAppContext';
 import useMediaQuery from './hooks/useMediaQuery';
 import WorkRequestModal from './components/work-requests/WorkRequestModal';
+import GlobalSearch from './components/search/GlobalSearch';
 
 const App: React.FC = () => {
-  const { zoomLevel, modalState, closeWorkRequestModal } = useAppContext();
+  const { zoomLevel, modalState, closeWorkRequestModal, isSearchOpen, closeSearch } = useAppContext();
   const isMobile = useMediaQuery('(max-width: 768px)');
   
   const getZoomClass = () => {
@@ -50,6 +51,7 @@ const App: React.FC = () => {
           </Routes>
         </main>
         {globalModal}
+        <GlobalSearch isOpen={isSearchOpen} onClose={closeSearch} />
       </div>
     );
   }
@@ -72,6 +74,7 @@ const App: React.FC = () => {
         </main>
       </div>
       {globalModal}
+      <GlobalSearch isOpen={isSearchOpen} onClose={closeSearch} />
     </div>
   );
 };

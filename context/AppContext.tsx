@@ -13,12 +13,15 @@ interface AppContextType {
   zoomLevel: ZoomLevel;
   theme: Theme;
   modalState: ModalState;
+  isSearchOpen: boolean;
 
   toggleSidebar: () => void;
   setZoomLevel: (level: ZoomLevel) => void;
   setTheme: (theme: Theme) => void;
   openWorkRequestModal: (request: WorkRequest | null, mode: ModalMode) => void;
   closeWorkRequestModal: () => void;
+  openSearch: () => void;
+  closeSearch: () => void;
 
   addProgram: (name: string) => Promise<void>;
   updateProgram: (program: Program) => Promise<void>;
@@ -62,6 +65,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     return 'system';
   });
   const [modalState, setModalState] = useState<ModalState>({ isOpen: false, request: null, mode: 'new' });
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
 
   // --- THEME MANAGEMENT ---
@@ -141,10 +145,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const openWorkRequestModal = useCallback((request: WorkRequest | null, mode: ModalMode) => {
     setModalState({ isOpen: true, request, mode });
   }, []);
-
   const closeWorkRequestModal = useCallback(() => {
     setModalState(prev => ({ ...prev, isOpen: false }));
   }, []);
+  const openSearch = useCallback(() => setIsSearchOpen(true), []);
+  const closeSearch = useCallback(() => setIsSearchOpen(false), []);
 
 
   // --- CRUD OPERATIONS ---
@@ -246,11 +251,14 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     zoomLevel,
     theme,
     modalState,
+    isSearchOpen,
     toggleSidebar,
     setZoomLevel,
     setTheme,
     openWorkRequestModal,
     closeWorkRequestModal,
+    openSearch,
+    closeSearch,
     addProgram,
     updateProgram,
     addSchool,
