@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAppContext } from '../../hooks/useAppContext';
@@ -7,6 +8,7 @@ import { PlusIcon } from '../icons/Icons';
 import { WorkRequest, RequestStatus } from '../../types';
 import WorkRequestList from '../work-requests/WorkRequestList';
 import { programToSlug } from '../../constants';
+import useMediaQuery from '../../hooks/useMediaQuery';
 
 const WorkRequests: React.FC = () => {
     const [view, setView] = useState('kanban'); // 'kanban', 'list'
@@ -14,15 +16,26 @@ const WorkRequests: React.FC = () => {
     const { workRequests, programs, deleteWorkRequest, updateWorkRequestStatus, openWorkRequestModal } = useAppContext();
     const [searchParams] = useSearchParams();
     const programSlug = searchParams.get('program');
+    
+    const isMobile = useMediaQuery('(max-width: 768px)');
+    const [mobileProgramFilter, setMobileProgramFilter] = useState<'All' | number>('All');
 
     const filteredRequests = useMemo(() => {
-        if (!programSlug) return workRequests;
+        if (isMobile) {
+            if (mobileProgramFilter === 'All') {
+                return workRequests;
+            }
+            return workRequests.filter(req => req.programId === mobileProgramFilter);
+        }
+
+        // Desktop logic
+        if (!programSlug) return workRequests; // All Requests view
         const program = programs.find(p => programToSlug(p.name) === programSlug);
-        if (!program) return workRequests;
+        if (!program) return []; // Return empty if slug is invalid
         
         return workRequests.filter(req => req.programId === program.id);
 
-    }, [programSlug, workRequests, programs]);
+    }, [programSlug, workRequests, programs, isMobile, mobileProgramFilter]);
 
     const handleAddRequest = () => {
         openWorkRequestModal(null, 'new');
@@ -48,14 +61,13 @@ const WorkRequests: React.FC = () => {
     };
     
     const renderView = () => {
-        const requestsToDisplay = programSlug ? filteredRequests : workRequests;
         switch (view) {
             case 'kanban':
-                return <KanbanBoard requests={requestsToDisplay} onDeleteRequest={handleDeleteRequest} onStatusChange={handleStatusChange} sortBy={kanbanSort} />;
+                return <KanbanBoard requests={filteredRequests} onDeleteRequest={handleDeleteRequest} onStatusChange={handleStatusChange} sortBy={kanbanSort} />;
             case 'list':
-                return <WorkRequestList requests={requestsToDisplay} onDeleteRequest={handleDeleteRequest} />;
+                return <WorkRequestList requests={filteredRequests} onDeleteRequest={handleDeleteRequest} />;
             default:
-                return <KanbanBoard requests={requestsToDisplay} onDeleteRequest={handleDeleteRequest} onStatusChange={handleStatusChange} sortBy={kanbanSort} />;
+                return <KanbanBoard requests={filteredRequests} onDeleteRequest={handleDeleteRequest} onStatusChange={handleStatusChange} sortBy={kanbanSort} />;
         }
     };
     
@@ -69,6 +81,24 @@ const WorkRequests: React.FC = () => {
 
     return (
         <div className="p-6 h-full flex flex-col">
+            {isMobile && !programSlug && (
+                <div className="mb-4">
+                    <label htmlFor="program-filter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Filter by Program
+                    </label>
+                    <select
+                        id="program-filter"
+                        value={mobileProgramFilter}
+                        onChange={(e) => setMobileProgramFilter(e.target.value === 'All' ? 'All' : Number(e.target.value))}
+                        className="w-full px-4 py-2 bg-white dark:bg-dark-card border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                        <option value="All">All Programs</option>
+                        {programs.map(program => (
+                            <option key={program.id} value={program.id}>{program.name}</option>
+                        ))}
+                    </select>
+                </div>
+            )}
             <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                 <div className='flex items-center gap-4'>
                     <button 
