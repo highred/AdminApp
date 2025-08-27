@@ -5,7 +5,7 @@ import { useAppContext } from '../../hooks/useAppContext';
 import useMediaQuery from '../../hooks/useMediaQuery';
 import ProgramCard from '../dashboard/ProgramCard';
 import AnalyticsWidget from '../dashboard/AnalyticsWidget';
-import { PlusIcon, SaveIcon, FireIcon } from '../icons/Icons';
+import { PlusIcon, SaveIcon, FireIcon, ClipboardListIcon } from '../icons/Icons';
 
 const Dashboard: React.FC = () => {
   const { programs, openWorkRequestModal } = useAppContext();
@@ -74,26 +74,28 @@ const Dashboard: React.FC = () => {
   if (isMobile) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-4 text-center bg-light-bg dark:bg-dark-bg">
-        <div className="flex-grow flex flex-col items-center justify-center">
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Welcome, Admin!</h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-sm">Ready to get things done? Add a new work request to get started.</p>
-            <button 
-                onClick={() => openWorkRequestModal(null, 'new')}
-                className="flex items-center justify-center w-full max-w-xs px-6 py-4 bg-primary text-white rounded-xl shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition text-lg font-semibold"
-            >
-                <PlusIcon className="h-6 w-6 mr-3" />
-                Add New Work Request
-            </button>
-        </div>
+        <div className="w-full max-w-sm">
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Welcome, Admin!</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-8">Ready to get things done? Add a new work request to get started.</p>
+          
+          <button 
+              onClick={() => openWorkRequestModal(null, 'new')}
+              className="flex items-center justify-center w-full px-6 py-4 bg-primary text-white rounded-xl shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition text-lg font-semibold mb-6"
+          >
+              <PlusIcon className="h-6 w-6 mr-3" />
+              Add New Work Request
+          </button>
         
-        <div className="flex-shrink-0 w-full max-w-xs pb-4 text-center">
-            <Link to="/hotlist" className="flex items-center justify-center w-full px-6 py-3 mb-3 bg-white dark:bg-dark-card border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-xl shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 transition font-semibold">
-                <FireIcon className="h-5 w-5 mr-2 text-red-500" />
-                View Daily Hotlist
-            </Link>
-            <Link to="/requests" className="text-gray-500 dark:text-gray-400 hover:underline text-sm font-medium">
-                View All Work Requests &rarr;
-            </Link>
+          <div className="space-y-3">
+              <Link to="/hotlist" className="flex items-center justify-center w-full px-6 py-3 bg-white dark:bg-dark-card border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-xl shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 transition font-semibold">
+                  <FireIcon className="h-5 w-5 mr-2 text-red-500" />
+                  View Daily Hotlist
+              </Link>
+              <Link to="/requests" className="flex items-center justify-center w-full px-6 py-3 bg-white dark:bg-dark-card border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-xl shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 transition font-semibold">
+                  <ClipboardListIcon className="h-5 w-5 mr-2 text-primary" />
+                  View All Work Requests
+              </Link>
+          </div>
         </div>
       </div>
     );
