@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import GridLayout from 'react-grid-layout';
 import { useAppContext } from '../../hooks/useAppContext';
@@ -15,14 +15,41 @@ const Dashboard: React.FC = () => {
   const [savedLayout, setSavedLayout] = useState<GridLayout.Layout[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
+  const gridContainerRef = useRef<HTMLDivElement>(null);
+  const [gridWidth, setGridWidth] = useState(1200);
+
+  useEffect(() => {
+    // Only run on desktop
+    if (isMobile) return;
+    
+    const gridEl = gridContainerRef.current;
+    if (!gridEl) return;
+
+    const resizeObserver = new ResizeObserver(entries => {
+        if (entries[0] && entries[0].contentRect.width > 0) {
+            setGridWidth(entries[0].contentRect.width);
+        }
+    });
+
+    resizeObserver.observe(gridEl);
+    
+    if (gridEl.offsetWidth > 0) {
+        setGridWidth(gridEl.offsetWidth);
+    }
+
+    return () => {
+        resizeObserver.unobserve(gridEl);
+    };
+  }, [isMobile]);
+
 
   const generateDefaultLayout = useCallback(() => {
     const analyticsLayout = { i: 'analytics-widget', x: 0, y: 0, w: 12, h: 7 };
     const programLayouts = programs.map((program, index) => ({
       i: program.id.toString(),
-      x: (index % 2) * 6,
-      y: Math.floor(index / 2) * 7 + 7, // Offset by analytics widget height
-      w: 6,
+      x: (index % 3) * 4,
+      y: Math.floor(index / 3) * 7 + 7, // Offset by analytics widget height
+      w: 4,
       h: 7,
     }));
     return [analyticsLayout, ...programLayouts];
@@ -34,16 +61,21 @@ const Dashboard: React.FC = () => {
       let initialLayout: GridLayout.Layout[];
 
       if (storedLayoutJSON) {
-        let storedLayout = JSON.parse(storedLayoutJSON);
+        let storedLayout: GridLayout.Layout[] = JSON.parse(storedLayoutJSON);
         
-        const hasAnalyticsWidget = storedLayout.some((item: GridLayout.Layout) => item.i === 'analytics-widget');
+        // Invalidate stored layout if it's the old 2-column format (w: 6) or if program items have changed.
+        const hasOldLayout = storedLayout.some(item => item.i !== 'analytics-widget' && item.w === 6);
+        
+        const storedProgramItems = storedLayout.filter(item => item.i !== 'analytics-widget');
+        const storedProgramIds = new Set(storedProgramItems.map(item => item.i));
+        const currentProgramIds = new Set(programs.map(p => p.id.toString()));
+        const programItemsMismatch = storedProgramItems.length !== programs.length || ![...currentProgramIds].every(id => storedProgramIds.has(id));
 
-        if (!hasAnalyticsWidget) {
-          const maxY = Math.max(0, ...storedLayout.map((item: GridLayout.Layout) => item.y + item.h));
-          const newAnalyticsWidgetLayout = { i: 'analytics-widget', x: 0, y: maxY, w: 12, h: 7 };
-          storedLayout.push(newAnalyticsWidgetLayout);
+        if (hasOldLayout || programItemsMismatch) {
+          initialLayout = generateDefaultLayout();
+        } else {
+          initialLayout = storedLayout;
         }
-        initialLayout = storedLayout;
       } else {
         initialLayout = generateDefaultLayout();
       }
@@ -73,7 +105,7 @@ const Dashboard: React.FC = () => {
 
   if (isMobile) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-4 text-center bg-light-bg dark:bg-dark-bg">
+      <div className="p-4 h-full flex flex-col items-center justify-center text-center bg-light-bg dark:bg-dark-bg">
         <div className="w-full max-w-sm">
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Welcome, Admin!</h1>
           <p className="text-gray-600 dark:text-gray-400 mb-8">Ready to get things done? Add a new work request to get started.</p>
@@ -86,8 +118,8 @@ const Dashboard: React.FC = () => {
               Add New Work Request
           </button>
         
-          <div className="space-y-3">
-              <Link to="/hotlist" className="flex items-center justify-center w-full px-6 py-3 bg-white dark:bg-dark-card border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-xl shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 transition font-semibold">
+          <div className="flex flex-col items-center justify-center w-full max-w-xs mx-auto">
+              <Link to="/hotlist" className="flex items-center justify-center w-full px-6 py-3 bg-white dark:bg-dark-card border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-xl shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 transition font-semibold mb-3">
                   <FireIcon className="h-5 w-5 mr-2 text-red-500" />
                   View Daily Hotlist
               </Link>
@@ -121,13 +153,13 @@ const Dashboard: React.FC = () => {
                 </button>
             </div>
         )}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto" ref={gridContainerRef}>
               <GridLayout
                   className="layout"
                   layout={currentLayout}
                   cols={12}
                   rowHeight={50}
-                  width={1200}
+                  width={gridWidth}
                   onLayoutChange={handleLayoutChange}
                   draggableHandle=".drag-handle"
               >
