@@ -44,6 +44,7 @@ const Header: React.FC = () => {
     const path = location.pathname;
     
     if (path === '/dashboard') return 'Programs Dashboard';
+    if (path === '/hotlist') return 'Daily Hotlist';
     if (path === '/chatbot') return 'AI Assistant';
     if (path === '/admin') return 'Admin Settings';
     if (path.startsWith('/requests')) {

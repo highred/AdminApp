@@ -104,7 +104,7 @@ const Dashboard: React.FC = () => {
   }
   
   return (
-      <div className="h-full flex flex-col">
+      <div className="p-6 h-full flex flex-col">
         {hasUnsavedChanges && (
             <div className="flex-shrink-0 bg-yellow-100 dark:bg-yellow-900/50 border-b-2 border-yellow-300 dark:border-yellow-700 p-3 flex justify-between items-center mb-2 rounded-lg">
                 <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">

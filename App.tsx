@@ -61,7 +61,7 @@ const App: React.FC = () => {
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 bg-light-bg dark:bg-dark-bg p-6 overflow-hidden">
+        <main className="flex-1 bg-light-bg dark:bg-dark-bg overflow-hidden min-h-0">
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" />} />
             <Route path="/dashboard" element={<Dashboard />} />

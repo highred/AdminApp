@@ -72,7 +72,7 @@ const Admin: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6 h-full overflow-y-auto">
+        <div className="p-6 space-y-6 h-full overflow-y-auto">
             <h1 className="text-3xl font-bold">Admin Settings</h1>
 
             <div className="bg-white dark:bg-dark-card rounded-lg shadow-md">

@@ -68,7 +68,7 @@ const WorkRequests: React.FC = () => {
 
 
     return (
-        <div className="h-full flex flex-col">
+        <div className="p-6 h-full flex flex-col">
             <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                 <div className='flex items-center gap-4'>
                     <button 

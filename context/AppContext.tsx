@@ -59,10 +59,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>('md');
   const [theme, setTheme] = useState<Theme>(() => {
     const storedTheme = localStorage.getItem('theme');
-    if (storedTheme === 'light' || storedTheme === 'dark') {
-      return storedTheme;
+    if (storedTheme === 'light' || storedTheme === 'dark' || storedTheme === 'system') {
+      return storedTheme as Theme;
     }
-    return 'system';
+    return 'dark';
   });
   const [modalState, setModalState] = useState<ModalState>({ isOpen: false, request: null, mode: 'new' });
   const [isSearchOpen, setIsSearchOpen] = useState(false);
