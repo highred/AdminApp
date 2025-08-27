@@ -1,10 +1,8 @@
-
-
 import React, { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAppContext } from '../../hooks/useAppContext';
 import KanbanBoard from '../work-requests/KanbanBoard';
-import { PlusIcon } from '../icons/Icons';
+import { PlusIcon, FilterIcon } from '../icons/Icons';
 import { WorkRequest, RequestStatus } from '../../types';
 import WorkRequestList from '../work-requests/WorkRequestList';
 import { programToSlug } from '../../constants';
@@ -19,6 +17,7 @@ const WorkRequests: React.FC = () => {
     
     const isMobile = useMediaQuery('(max-width: 768px)');
     const [mobileProgramFilter, setMobileProgramFilter] = useState<'All' | number>('All');
+    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
     const filteredRequests = useMemo(() => {
         if (isMobile) {
@@ -31,7 +30,7 @@ const WorkRequests: React.FC = () => {
         // Desktop logic
         if (!programSlug) return workRequests; // All Requests view
         const program = programs.find(p => programToSlug(p.name) === programSlug);
-        if (!program) return []; // Return empty if slug is invalid
+        if (!program) return workRequests; // FIX: Return all if slug is invalid
         
         return workRequests.filter(req => req.programId === program.id);
 
@@ -80,50 +79,88 @@ const WorkRequests: React.FC = () => {
 
 
     return (
-        <div className="p-6 h-full flex flex-col">
-            {isMobile && !programSlug && (
-                <div className="mb-4">
-                    <label htmlFor="program-filter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Filter by Program
-                    </label>
-                    <select
-                        id="program-filter"
-                        value={mobileProgramFilter}
-                        onChange={(e) => setMobileProgramFilter(e.target.value === 'All' ? 'All' : Number(e.target.value))}
-                        className="w-full px-4 py-2 bg-white dark:bg-dark-card border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    >
-                        <option value="All">All Programs</option>
-                        {programs.map(program => (
-                            <option key={program.id} value={program.id}>{program.name}</option>
-                        ))}
-                    </select>
-                </div>
-            )}
-            <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <div className='flex items-center gap-4'>
-                    <button 
-                        onClick={handleAddRequest}
-                        className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition"
-                    >
-                        <PlusIcon className="h-5 w-5 mr-2" />
-                        Add New Request
-                    </button>
-                </div>
-                <div className="flex items-center space-x-2 bg-gray-200 dark:bg-gray-700 rounded-lg p-1">
-                     {view === 'kanban' && (
-                        <>
+        <div className="p-4 md:p-6 h-full flex flex-col">
+            {/* Header */}
+            {isMobile ? (
+                <div className="flex justify-between items-center mb-4 gap-2">
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setIsFilterModalOpen(true)}
+                            className="p-2 bg-white dark:bg-dark-card border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm"
+                            aria-label="Filter by Program"
+                        >
+                            <FilterIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                        </button>
+                        <div className="flex items-center bg-gray-200 dark:bg-gray-700 rounded-lg p-1">
                             <button onClick={() => setKanbanSort('priority')} className={getButtonClass(kanbanSort === 'priority')}>Priority</button>
                             <button onClick={() => setKanbanSort('recent')} className={getButtonClass(kanbanSort === 'recent')}>Recent</button>
-                            <div className="w-px h-4 bg-gray-300 dark:bg-gray-600"></div>
-                        </>
-                    )}
-                    <button onClick={() => setView('kanban')} className={getButtonClass(view === 'kanban')}>Kanban</button>
-                    <button onClick={() => setView('list')} className={getButtonClass(view === 'list')}>List</button>
+                        </div>
+                    </div>
+                     <button 
+                        onClick={handleAddRequest}
+                        className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-indigo-700 transition text-sm font-medium"
+                    >
+                        <PlusIcon className="h-5 w-5 mr-1" />
+                        New
+                    </button>
                 </div>
-            </div>
+            ) : (
+                <div className="flex flex-row justify-between items-center mb-6 gap-4">
+                    <div className='flex items-center gap-4'>
+                        <button 
+                            onClick={handleAddRequest}
+                            className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition"
+                        >
+                            <PlusIcon className="h-5 w-5 mr-2" />
+                            Add New Request
+                        </button>
+                    </div>
+                    <div className="flex items-center space-x-2 bg-gray-200 dark:bg-gray-700 rounded-lg p-1">
+                         {view === 'kanban' && (
+                            <>
+                                <button onClick={() => setKanbanSort('priority')} className={getButtonClass(kanbanSort === 'priority')}>Priority</button>
+                                <button onClick={() => setKanbanSort('recent')} className={getButtonClass(kanbanSort === 'recent')}>Recent</button>
+                                <div className="w-px h-4 bg-gray-300 dark:bg-gray-600"></div>
+                            </>
+                        )}
+                        <button onClick={() => setView('kanban')} className={getButtonClass(view === 'kanban')}>Kanban</button>
+                        <button onClick={() => setView('list')} className={getButtonClass(view === 'list')}>List</button>
+                    </div>
+                </div>
+            )}
+            
+            {/* Content */}
             <div className="flex-1 overflow-hidden">
-                {renderView()}
+                {isMobile 
+                    ? <KanbanBoard requests={filteredRequests} onDeleteRequest={handleDeleteRequest} onStatusChange={handleStatusChange} sortBy={kanbanSort} />
+                    : renderView()
+                }
             </div>
+
+            {/* Mobile Filter Modal */}
+            {isMobile && isFilterModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-60 z-40 flex justify-center items-center p-4" onClick={() => setIsFilterModalOpen(false)}>
+                    <div className="bg-white dark:bg-dark-card rounded-lg shadow-xl w-full max-w-sm" onClick={e => e.stopPropagation()}>
+                        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                            <h3 className="font-bold text-lg">Filter by Program</h3>
+                        </div>
+                        <ul className="p-2 max-h-64 overflow-y-auto">
+                            <li>
+                                <button onClick={() => { setMobileProgramFilter('All'); setIsFilterModalOpen(false); }} className={`w-full text-left p-3 rounded-md font-medium ${mobileProgramFilter === 'All' ? 'bg-primary/10 text-primary' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
+                                    All Programs
+                                </button>
+                            </li>
+                            {programs.map(program => (
+                                <li key={program.id}>
+                                    <button onClick={() => { setMobileProgramFilter(program.id); setIsFilterModalOpen(false); }} className={`w-full text-left p-3 rounded-md ${mobileProgramFilter === program.id ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
+                                        {program.name}
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
