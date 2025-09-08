@@ -1,11 +1,7 @@
-
-
-
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { RequestStatus, WorkRequest } from '../../types';
 import KanbanColumn from './KanbanColumn';
-import { REQUEST_PRIORITY_ORDER } from '../../constants';
+import { REQUEST_PRIORITY_ORDER, VIRTUAL_STATUS_NEW_0_7_DAYS, VIRTUAL_STATUS_NEW_8_14_DAYS, VIRTUAL_STATUS_NEW_15_PLUS_DAYS } from '../../constants';
 
 interface KanbanBoardProps {
     requests: WorkRequest[];
@@ -16,22 +12,57 @@ interface KanbanBoardProps {
 
 const KanbanBoard: React.FC<KanbanBoardProps> = ({ requests, onDeleteRequest, onStatusChange, sortBy }) => {
 
-    const columns: RequestStatus[] = [
-        RequestStatus.NewRequest,
+    const columns: string[] = [
+        VIRTUAL_STATUS_NEW_0_7_DAYS,
+        VIRTUAL_STATUS_NEW_8_14_DAYS,
+        VIRTUAL_STATUS_NEW_15_PLUS_DAYS,
         RequestStatus.InProgress,
         RequestStatus.OnHold,
         RequestStatus.Completed
     ];
     
-    const onDrop = (requestId: number, newStatus: RequestStatus) => {
+    const onDrop = (requestId: number, newStatusString: string) => {
         const request = requests.find(r => r.id === requestId);
-        if (request && request.status !== newStatus) {
-            onStatusChange(requestId, newStatus, request.status);
+        
+        // Map virtual statuses back to the real status for the update
+        const isVirtualStatus = [VIRTUAL_STATUS_NEW_0_7_DAYS, VIRTUAL_STATUS_NEW_8_14_DAYS, VIRTUAL_STATUS_NEW_15_PLUS_DAYS].includes(newStatusString);
+        
+        const realNewStatus = isVirtualStatus ? RequestStatus.NewRequest : newStatusString as RequestStatus;
+
+        if (request && request.status !== realNewStatus) {
+            onStatusChange(requestId, realNewStatus, request.status);
         }
     };
 
-    const getRequestsByStatus = (status: RequestStatus): WorkRequest[] => {
-        const filtered = requests.filter(req => req.status === status);
+    const getRequestsByStatus = (status: string): WorkRequest[] => {
+        let filtered: WorkRequest[];
+        const isVirtualStatus = [VIRTUAL_STATUS_NEW_0_7_DAYS, VIRTUAL_STATUS_NEW_8_14_DAYS, VIRTUAL_STATUS_NEW_15_PLUS_DAYS].includes(status);
+
+        if (isVirtualStatus) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const newRequests = requests.filter(req => req.status === RequestStatus.NewRequest);
+
+            filtered = newRequests.filter(req => {
+                const submittedDate = new Date(`${req.submittedDate}T00:00:00`);
+                const diffTime = today.getTime() - submittedDate.getTime();
+                const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+                if (status === VIRTUAL_STATUS_NEW_0_7_DAYS) {
+                    return diffDays <= 7;
+                }
+                if (status === VIRTUAL_STATUS_NEW_8_14_DAYS) {
+                    return diffDays > 7 && diffDays <= 14;
+                }
+                if (status === VIRTUAL_STATUS_NEW_15_PLUS_DAYS) {
+                    return diffDays > 14;
+                }
+                return false;
+            });
+        } else {
+            filtered = requests.filter(req => req.status === status);
+        }
 
         if (sortBy === 'priority') {
             return filtered.sort((a, b) => {
@@ -39,24 +70,21 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ requests, onDeleteRequest, on
                 if (priorityComparison !== 0) {
                     return priorityComparison;
                 }
-                // Secondary sort by date for items with the same priority
                 return new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime();
             });
         }
         
-        // Default sort by 'recent'
         return filtered.sort((a, b) => new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime());
     };
 
     // --- Touch Drag and Drop State and Logic ---
     const [draggedItem, setDraggedItem] = useState<{ id: number; ghost: HTMLElement; original: HTMLElement; } | null>(null);
-    const [overColumn, setOverColumn] = useState<RequestStatus | null>(null);
+    const [overColumn, setOverColumn] = useState<string | null>(null);
     const columnRefs = useRef<Record<string, HTMLDivElement | null>>({});
     const boardRef = useRef<HTMLDivElement>(null);
 
 
     const initiateMobileDrag = useCallback((cardElement: HTMLElement, request: WorkRequest) => {
-        // Create a ghost element for visual feedback
         const rect = cardElement.getBoundingClientRect();
         const ghost = cardElement.cloneNode(true) as HTMLElement;
         ghost.style.position = 'fixed';
@@ -68,28 +96,22 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ requests, onDeleteRequest, on
         ghost.style.zIndex = '1000';
         ghost.style.opacity = '0.8';
         ghost.style.transform = 'rotate(3deg) scale(1.05)';
-        ghost.style.transition = 'none'; // So it moves instantly
+        ghost.style.transition = 'none';
         document.body.appendChild(ghost);
         
-        // Update state
         setDraggedItem({ id: request.id, ghost, original: cardElement });
         cardElement.style.opacity = '0.3';
     }, []);
 
     const handleTouchMove = useCallback((e: TouchEvent) => {
         if (!draggedItem) return;
-
-        // Prevent scroll while dragging
         e.preventDefault();
-
         const touch = e.touches[0];
         
-        // Move ghost element
         draggedItem.ghost.style.top = `${touch.clientY - (draggedItem.ghost.offsetHeight / 2)}px`;
         draggedItem.ghost.style.left = `${touch.clientX - (draggedItem.ghost.offsetWidth / 2)}px`;
 
-        // Check for column overlap
-        let foundOverColumn: RequestStatus | null = null;
+        let foundOverColumn: string | null = null;
         for (const status in columnRefs.current) {
             const columnEl = columnRefs.current[status];
             if (columnEl) {
@@ -100,17 +122,16 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ requests, onDeleteRequest, on
                     touch.clientY >= rect.top &&
                     touch.clientY <= rect.bottom
                 ) {
-                    foundOverColumn = status as RequestStatus;
+                    foundOverColumn = status;
                     break;
                 }
             }
         }
         setOverColumn(foundOverColumn);
 
-        // Auto-scroll kanban board
         if (boardRef.current) {
             const boardRect = boardRef.current.getBoundingClientRect();
-            const scrollSpeed = 25; // Increased scroll speed
+            const scrollSpeed = 25;
             if(touch.clientX > boardRect.right - 50) {
                 boardRef.current.scrollLeft += scrollSpeed;
             } else if (touch.clientX < boardRect.left + 50) {
@@ -123,26 +144,19 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ requests, onDeleteRequest, on
     const handleTouchEnd = useCallback(() => {
         if (!draggedItem) return;
         
-        // Restore original card's opacity
         draggedItem.original.style.opacity = '1';
-
-        // Cleanup ghost element
         document.body.removeChild(draggedItem.ghost);
 
-        // Trigger drop logic
-        const request = requests.find(r => r.id === draggedItem.id);
-        if (overColumn && request && request.status !== overColumn) {
-            onStatusChange(draggedItem.id, overColumn, request.status);
+        if (overColumn) {
+            onDrop(draggedItem.id, overColumn);
         }
 
-        // Reset state
         setDraggedItem(null);
         setOverColumn(null);
-    }, [draggedItem, overColumn, requests, onStatusChange]);
+    }, [draggedItem, overColumn, requests, onDrop]);
 
     useEffect(() => {
         if (draggedItem) {
-            // Use passive: false to allow preventDefault
             window.addEventListener('touchmove', handleTouchMove, { passive: false });
             window.addEventListener('touchend', handleTouchEnd);
         } else {

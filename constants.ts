@@ -82,9 +82,16 @@ export const REQUEST_PRIORITY_TEXT_COLORS: Record<RequestPriority, string> = {
   [RequestPriority.Low]: 'text-green-800 dark:text-green-300 bg-green-100 dark:bg-green-900',
 };
 
-export const KANBAN_COLUMN_COLORS: Record<RequestStatus, string> = {
-    [RequestStatus.NewRequest]: 'border-t-red-500',
-    [RequestStatus.InProgress]: 'border-t-yellow-500',
+// Virtual statuses for time-based Kanban columns
+export const VIRTUAL_STATUS_NEW_0_7_DAYS = 'New (0-7 Days)';
+export const VIRTUAL_STATUS_NEW_8_14_DAYS = 'New (8-14 Days)';
+export const VIRTUAL_STATUS_NEW_15_PLUS_DAYS = 'New (15+ Days)';
+
+export const KANBAN_COLUMN_COLORS: Record<string, string> = {
+    [VIRTUAL_STATUS_NEW_0_7_DAYS]: 'border-t-blue-500',
+    [VIRTUAL_STATUS_NEW_8_14_DAYS]: 'border-t-yellow-500',
+    [VIRTUAL_STATUS_NEW_15_PLUS_DAYS]: 'border-t-red-500',
+    [RequestStatus.InProgress]: 'border-t-orange-500',
     [RequestStatus.OnHold]: 'border-t-gray-500',
     [RequestStatus.Completed]: 'border-t-green-500',
 };

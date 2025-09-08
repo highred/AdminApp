@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, forwardRef } from 'react';
 import { RequestStatus, WorkRequest } from '../../types';
 import KanbanCard from './KanbanCard';
@@ -8,9 +5,9 @@ import { KANBAN_COLUMN_COLORS } from '../../constants';
 import { useAppContext } from '../../hooks/useAppContext';
 
 interface KanbanColumnProps {
-    status: RequestStatus;
+    status: string;
     requests: WorkRequest[];
-    onDrop: (requestId: number, newStatus: RequestStatus) => void;
+    onDrop: (requestId: number, newStatus: string) => void;
     onDeleteRequest: (requestId: number) => void;
     onCardLongPressStart: (cardElement: HTMLElement, request: WorkRequest) => void;
     draggedItemId: number | null;
@@ -37,7 +34,7 @@ const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(({ status, re
         setIsDesktopOver(false);
     };
 
-    const colorClass = KANBAN_COLUMN_COLORS[status];
+    const colorClass = KANBAN_COLUMN_COLORS[status] || 'border-t-gray-400';
     
     const getWidthClass = () => {
         switch (zoomLevel) {
