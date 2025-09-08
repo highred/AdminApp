@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import GridLayout from 'react-grid-layout';
 import { useAppContext } from '../../hooks/useAppContext';
@@ -6,9 +6,10 @@ import useMediaQuery from '../../hooks/useMediaQuery';
 import ProgramCard from '../dashboard/ProgramCard';
 import AnalyticsWidget from '../dashboard/AnalyticsWidget';
 import { PlusIcon, SaveIcon, FireIcon, ClipboardListIcon } from '../icons/Icons';
+import { RequestStatus } from '../../types';
 
 const Dashboard: React.FC = () => {
-  const { programs, openWorkRequestModal } = useAppContext();
+  const { programs, workRequests, openWorkRequestModal } = useAppContext();
   const isMobile = useMediaQuery('(max-width: 768px)');
   
   const [currentLayout, setCurrentLayout] = useState<GridLayout.Layout[]>([]);
@@ -17,6 +18,58 @@ const Dashboard: React.FC = () => {
   const [isLayoutInitialized, setIsLayoutInitialized] = useState(false);
   const gridContainerRef = useRef<HTMLDivElement>(null);
   const [gridWidth, setGridWidth] = useState(1200);
+  
+  const motivationalQuotes = [
+    "The secret of getting ahead is getting started.",
+    "Well done is better than well said.",
+    "You are what you repeatedly do. Excellence, then, is not an act, but a habit.",
+    "The only way to do great work is to love what you do.",
+    "Success is the sum of small efforts, repeated day in and day out.",
+    "Either you run the day, or the day runs you.",
+    "Believe you can and you're halfway there.",
+    "The future depends on what you do today.",
+    "Don't watch the clock; do what it does. Keep going.",
+    "Act as if what you do makes a difference. It does.",
+    "The journey of a thousand miles begins with a single step.",
+    "Focus on being productive instead of busy."
+  ];
+  
+  const dailyQuote = useMemo(() => {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    const diff = now.getTime() - start.getTime();
+    const oneDay = 1000 * 60 * 60 * 24;
+    const dayOfYear = Math.floor(diff / oneDay);
+    return motivationalQuotes[dayOfYear % motivationalQuotes.length];
+  }, []);
+
+  const kpiData = useMemo(() => {
+    const today = new Date();
+    const completedRequests = workRequests.filter(req => req.status === RequestStatus.Completed);
+
+    const completedAllTime = completedRequests.length;
+
+    const completedLast7Days = completedRequests.filter(req => {
+        const refDateStr = req.dueDate || req.submittedDate;
+        if (!refDateStr) return false;
+        // Adjust for timezone by treating date string as UTC
+        const refDate = new Date(`${refDateStr}T00:00:00`);
+        const diffTime = today.getTime() - refDate.getTime();
+        const diffDays = diffTime / (1000 * 3600 * 24);
+        return diffDays >= 0 && diffDays <= 7;
+    }).length;
+
+    const completedLast30Days = completedRequests.filter(req => {
+        const refDateStr = req.dueDate || req.submittedDate;
+        if (!refDateStr) return false;
+        const refDate = new Date(`${refDateStr}T00:00:00`);
+        const diffTime = today.getTime() - refDate.getTime();
+        const diffDays = diffTime / (1000 * 3600 * 24);
+        return diffDays >= 0 && diffDays <= 30;
+    }).length;
+
+    return { completedAllTime, completedLast7Days, completedLast30Days };
+  }, [workRequests]);
 
   useEffect(() => {
     // Only run on desktop
@@ -105,9 +158,10 @@ const Dashboard: React.FC = () => {
 
   if (isMobile) {
     return (
-      <div className="p-4 h-full flex flex-col items-center justify-center text-center bg-light-bg dark:bg-dark-bg">
+      <div className="p-4 h-full flex flex-col items-center justify-center text-center bg-light-bg dark:bg-dark-bg overflow-y-auto">
         <div className="w-full max-w-sm">
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Welcome, Admin!</h1>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Welcome, Admin!</h1>
+          <p className="text-sm italic text-gray-500 dark:text-gray-400 mb-6 px-4">"{dailyQuote}"</p>
           <p className="text-gray-600 dark:text-gray-400 mb-8">Ready to get things done? Add a new work request to get started.</p>
           
           <button 
@@ -128,6 +182,25 @@ const Dashboard: React.FC = () => {
                   View All Work Requests
               </Link>
           </div>
+          
+          <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 w-full max-w-xs mx-auto">
+              <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">Completed Tasks</h2>
+              <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className="bg-white dark:bg-dark-card p-3 rounded-lg shadow-md">
+                      <p className="text-2xl font-bold text-secondary">{kpiData.completedLast7Days}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Last 7 Days</p>
+                  </div>
+                  <div className="bg-white dark:bg-dark-card p-3 rounded-lg shadow-md">
+                      <p className="text-2xl font-bold text-secondary">{kpiData.completedLast30Days}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Last 30 Days</p>
+                  </div>
+                  <div className="bg-white dark:bg-dark-card p-3 rounded-lg shadow-md">
+                      <p className="text-2xl font-bold text-secondary">{kpiData.completedAllTime}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">All Time</p>
+                  </div>
+              </div>
+          </div>
+
         </div>
       </div>
     );

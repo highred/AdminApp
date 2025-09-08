@@ -41,8 +41,8 @@ const DailyHotlist: React.FC = () => {
             return new Date(a.submittedDate).getTime() - new Date(b.submittedDate).getTime();
         });
 
-        // 3. Take the top 20
-        return sortedRequests.slice(0, 20);
+        // 3. Take the top 50
+        return sortedRequests.slice(0, 50);
     }, [workRequests]);
 
     return (
@@ -52,7 +52,7 @@ const DailyHotlist: React.FC = () => {
                     <FireIcon className="h-8 w-8 mr-3 text-red-500" />
                     Daily Hotlist
                 </h1>
-                <p className="mt-2 text-gray-600 dark:text-gray-400">Your top 20 most critical tasks based on priority, status, and due date.</p>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">Your top 50 most critical tasks based on priority, status, and due date.</p>
             </div>
 
             <div className="flex-1 overflow-y-auto mt-6">
